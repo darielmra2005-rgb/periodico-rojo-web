@@ -1,3 +1,5 @@
+import { isOfficialSource } from "../config/official-sources.ts";
+
 type PublicationData = {
   isDraft?: boolean;
   reviewed?: boolean;
@@ -16,7 +18,7 @@ export function matchesEdition(data: { municipality?: string; category?: string 
 export function isPublishedMunicipalArticle(data: PublicationData, now = new Date()): boolean {
   const published = new Date(data.publishedTime);
   return data.isDraft !== true && data.reviewed === true &&
-    Boolean(data.municipality && data.sourceName?.trim() && data.sourceUrl) &&
+    Boolean(data.sourceName?.trim()) && isOfficialSource(data.sourceUrl, data.municipality) &&
     Number.isFinite(published.getTime()) && published <= now;
 }
 

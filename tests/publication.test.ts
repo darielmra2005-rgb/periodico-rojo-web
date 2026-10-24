@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isPublishedMunicipalArticle, isUpcomingEvent, matchesEdition } from "../src/lib/handlers/publication.ts";
+import { isOfficialSource, OFFICIAL_SOURCES } from "../src/lib/config/official-sources.ts";
 
 const now = new Date("2026-10-24T18:00:00Z");
 const reviewedNews = {
@@ -8,9 +9,36 @@ const reviewedNews = {
   isDraft: false,
   municipality: "garcia",
   sourceName: "Gobierno municipal",
-  sourceUrl: "https://example.org/comunicado",
+  sourceUrl: "https://garcia.gob.mx/comunicado-para-prueba-unitaria/",
   publishedTime: "2026-10-24T17:00:00Z",
 };
+
+test("only the registered official portal for the article's municipality is accepted", () => {
+  for (const [municipality, source] of Object.entries(OFFICIAL_SOURCES)) {
+    assert.equal(isOfficialSource(source.portal, municipality), true);
+    assert.equal(isOfficialSource(`https://www.${source.hostname}/comunicado`, municipality), true);
+  }
+  assert.equal(isOfficialSource("https://www.monterrey.gob.mx/noticias/", "garcia"), false);
+  assert.equal(isOfficialSource("https://garcia.gob.mx/noticia", "unknown"), false);
+  assert.equal(isOfficialSource("https://garcia.gob.mx/noticia", "toString"), false);
+});
+
+test("a valid URL or official-looking name cannot bypass the source restriction", () => {
+  for (const sourceUrl of [
+    "https://example.org/comunicado",
+    "https://garcia.gob.mx.example.org/noticia",
+    "https://fakegarcia.gob.mx/noticia",
+    "https://example.org/garcia.gob.mx/noticia",
+    "https://garcia.gob.mx@example.org/noticia",
+    "https://usuario@garcia.gob.mx/noticia",
+    "https://garcia.gob.mx:8443/noticia",
+    "http://garcia.gob.mx/noticia",
+    "https://www.facebook.com/noticia",
+    "not-a-url",
+  ]) {
+    assert.equal(isPublishedMunicipalArticle({ ...reviewedNews, sourceUrl }, now), false, sourceUrl);
+  }
+});
 
 test("municipality and topic filters intersect rather than adding unrelated stories", () => {
   const news = [
