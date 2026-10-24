@@ -8,6 +8,8 @@ export const articleSchema = (image: ImageFunction) =>
     reviewed: z.boolean().default(false),
     municipality: z.enum(MUNICIPALITY_SLUGS).optional(),
     sourceName: z.string().optional(),
+    sourcePublishedDate: z.string().date().optional(),
+    sourceImageUrl: z.string().url().optional(),
     sourceUrl: z.string().url().refine((url) => /^https?:\/\//.test(url), "Usa un enlace http o https").optional(),
     photoCredit: z.string().optional(),
     eventDate: z.string().datetime({ offset: true }).optional(),

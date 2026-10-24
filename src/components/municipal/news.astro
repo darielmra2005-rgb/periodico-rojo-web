@@ -11,7 +11,7 @@ const selectedArticles = articles.filter(matches);
 const events = articles.filter((article) => article.data.eventDate).sort((a, b) => new Date(a.data.eventDate!).getTime() - new Date(b.data.eventDate!).getTime());
 const futureEvents = events.filter((article) => matches(article) && isUpcomingEvent(article.data.eventDate, article.data.eventStatus));
 const title = initialMunicipality ? municipalityName(initialMunicipality) : initialCategory ? categoryName(initialCategory) : "Tu ciudad. Tu información.";
-const formatDate = (date: string | Date, event = false) => new Intl.DateTimeFormat("es-MX", { dateStyle: "long", ...(event ? { timeStyle: "short" as const } : {}), timeZone: "America/Monterrey" }).format(new Date(date));
+const formatDate = (date: string | Date, event = false) => new Intl.DateTimeFormat("es-MX", { dateStyle: "long", ...(event ? { timeStyle: "short" as const } : {}), timeZone: typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date) ? "UTC" : "America/Monterrey" }).format(new Date(date));
 ---
 
 <municipal-news class="container municipal-news" data-initial-municipality={initialMunicipality} data-initial-category={initialCategory} data-total={articles.length}>
@@ -36,7 +36,7 @@ const formatDate = (date: string | Date, event = false) => new Intl.DateTimeForm
         {article.data.cover && article.data.photoCredit && <p class="photo-credit">Foto: {article.data.photoCredit}</p>}
         <div class="card-tags"><a href={`/municipios/${article.data.municipality}`}>{municipalityName(article.data.municipality)}</a><span>·</span><a href={`/categorias/${article.data.category.id}`}>{categoryName(article.data.category.id)}</a></div>
         <h3><a href={`/articles/${article.id}`}>{article.data.title}</a></h3><p class="card-description">{article.data.description}</p>
-        <time datetime={new Date(article.data.publishedTime).toISOString()}>{formatDate(article.data.publishedTime)}</time>
+        <time datetime={article.data.sourcePublishedDate ?? new Date(article.data.publishedTime).toISOString()}>Comunicado: {formatDate(article.data.sourcePublishedDate ?? article.data.publishedTime)}</time>
       </article>)}
     </div>
     <div class="empty-edition" data-empty-news hidden={selectedArticles.length > 0}>

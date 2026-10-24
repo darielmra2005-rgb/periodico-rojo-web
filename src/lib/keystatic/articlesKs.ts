@@ -11,6 +11,8 @@ export const articlesKs = collection({
     reviewed: fields.checkbox({ label: "Revisión editorial completada", defaultValue: false }),
     municipality: fields.select({ label: "Municipio", options: MUNICIPALITIES.map(({ slug, name }) => ({ label: name, value: slug })), defaultValue: "garcia" }),
     sourceName: fields.text({ label: "Nombre de la fuente oficial" }),
+    sourcePublishedDate: fields.text({ label: "Fecha original del comunicado (AAAA-MM-DD)" }),
+    sourceImageUrl: fields.url({ label: "Enlace de la fotografía original" }),
     sourceUrl: fields.url({ label: "Enlace de la publicación original" }),
     photoCredit: fields.text({ label: "Crédito de la fotografía" }),
     covert_alt: fields.text({ label: "Descripción de la fotografía" }),

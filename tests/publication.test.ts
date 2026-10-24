@@ -10,6 +10,7 @@ const reviewedNews = {
   municipality: "garcia",
   sourceName: "Gobierno municipal",
   sourceUrl: "https://garcia.gob.mx/comunicado-para-prueba-unitaria/",
+  sourcePublishedDate: "2026-10-23",
   publishedTime: "2026-10-24T17:00:00Z",
 };
 
@@ -75,6 +76,17 @@ test("scheduled notes remain hidden until their publication time", () => {
 });
 test("invalid publication dates fail closed", () => {
   assert.equal(isPublishedMunicipalArticle({ ...reviewedNews, publishedTime: "invalid" }, now), false);
+});
+test("an original source date is required and must be a real calendar day", () => {
+  for (const sourcePublishedDate of [undefined, "", "23/10/2026", "2026-02-30", "invalid"]) {
+    assert.equal(isPublishedMunicipalArticle({ ...reviewedNews, sourcePublishedDate }, now), false);
+  }
+});
+test("a source cannot be dated after the article, using the municipality's calendar day", () => {
+  assert.equal(isPublishedMunicipalArticle({ ...reviewedNews, sourcePublishedDate: "2026-10-25" }, now), false);
+  const midnightUTC = { ...reviewedNews, publishedTime: "2026-10-24T03:00:00Z", sourcePublishedDate: "2026-10-24" };
+  assert.equal(isPublishedMunicipalArticle(midnightUTC, now), false);
+  assert.equal(isPublishedMunicipalArticle({ ...midnightUTC, sourcePublishedDate: "2026-10-23" }, now), true);
 });
 test("an upcoming event is evaluated using its event time, including timezone", () => {
   assert.equal(isUpcomingEvent("2026-10-24T13:00:00-06:00", "programado", now), true);

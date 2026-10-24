@@ -6,9 +6,8 @@ const articlesCollection = (
     return isPublishedMunicipalArticle(data);
   })
 ).sort((a, b) =>
-  new Date(b.data.publishedTime)
-    .toISOString()
-    .localeCompare(new Date(a.data.publishedTime).toISOString())
+  (b.data.sourcePublishedDate ?? "").localeCompare(a.data.sourcePublishedDate ?? "") ||
+  new Date(b.data.publishedTime).getTime() - new Date(a.data.publishedTime).getTime()
 );
 
 export const articlesHandler = {

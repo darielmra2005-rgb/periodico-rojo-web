@@ -9,13 +9,15 @@ const { article } = Astro.props;
 const data = article.data;
 const authors = authorsHandler.getAuthors(data.authors);
 const date = (value: string | Date) => new Intl.DateTimeFormat("es-MX", { dateStyle: "long", timeStyle: "short", timeZone: "America/Monterrey" }).format(new Date(value));
+const sourceDate = (value: string) => new Intl.DateTimeFormat("es-MX", { dateStyle: "long", timeZone: "UTC" }).format(new Date(value));
 ---
 <section class="container article-heading">
   <a class="back" href={data.municipality ? `/municipios/${data.municipality}` : "/"}>← Volver a noticias</a>
   <div class="tags"><a href={`/municipios/${data.municipality}`}>{municipalityName(data.municipality)}</a><span>·</span><a href={`/categorias/${data.category.id}`}>{categoryName(data.category.id)}</a></div>
   <h1>{data.title}</h1><p class="description">{data.description}</p>
   <p class="byline">{authors.map((author) => author.data.name).join(", ")} · Publicado el <time datetime={new Date(data.publishedTime).toISOString()}>{date(data.publishedTime)}</time></p>
-  {data.cover && <figure><Image src={data.cover} alt={data.covert_alt ?? data.title} width={1200} loading="eager" class="article-photo" />{data.photoCredit && <figcaption>Foto: {data.photoCredit}</figcaption>}</figure>}
+  {data.sourcePublishedDate && <p class="byline">Fecha del comunicado original: <time datetime={data.sourcePublishedDate}>{sourceDate(data.sourcePublishedDate)}</time></p>}
+  {data.cover && <figure><Image src={data.cover} alt={data.covert_alt ?? data.title} width={1200} loading="eager" class="article-photo" />{data.photoCredit && <figcaption>Foto: {data.photoCredit}{data.sourceImageUrl && <> · <a href={data.sourceImageUrl} target="_blank" rel="noopener noreferrer">Ver imagen original ↗</a></>}</figcaption>}</figure>}
   {data.eventDate && <aside class="event-info"><strong>{data.eventStatus === "cancelado" ? "Aviso: evento cancelado" : "Datos del evento"}</strong><p>Fecha: <time datetime={data.eventDate}>{date(data.eventDate)}</time></p>{data.eventLocation && <p>Lugar: {data.eventLocation}</p>}{data.eventAdmission && <p>Acceso: {data.eventAdmission}</p>}</aside>}
   {data.sourceUrl && <p class="official-source">Fuente oficial: <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer">{data.sourceName ?? "Publicación original"} ↗</a></p>}
   <Share text={data.title} />
