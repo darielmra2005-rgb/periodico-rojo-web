@@ -1,0 +1,130 @@
+---
+import { Image } from "astro:assets";
+import { articlesHandler } from "@/lib/handlers/articles";
+import { MUNICIPALITIES, NEWS_CATEGORIES, municipalityName, categoryName } from "@/lib/config/municipal";
+import { isUpcomingEvent, matchesEdition } from "@/lib/handlers/publication";
+type Props = { initialMunicipality?: string; initialCategory?: string };
+const { initialMunicipality = "", initialCategory = "" } = Astro.props;
+const articles = articlesHandler.allArticles();
+const matches = (article: typeof articles[number]) => matchesEdition({ municipality: article.data.municipality, category: article.data.category.id }, initialMunicipality, initialCategory);
+const selectedArticles = articles.filter(matches);
+const events = articles.filter((article) => article.data.eventDate).sort((a, b) => new Date(a.data.eventDate!).getTime() - new Date(b.data.eventDate!).getTime());
+const futureEvents = events.filter((article) => matches(article) && isUpcomingEvent(article.data.eventDate, article.data.eventStatus));
+const title = initialMunicipality ? municipalityName(initialMunicipality) : initialCategory ? categoryName(initialCategory) : "Tu ciudad. Tu información.";
+const formatDate = (date: string | Date, event = false) => new Intl.DateTimeFormat("es-MX", { dateStyle: "long", ...(event ? { timeStyle: "short" as const } : {}), timeZone: "America/Monterrey" }).format(new Date(date));
+---
+
+<municipal-news class="container municipal-news" data-initial-municipality={initialMunicipality} data-initial-category={initialCategory} data-total={articles.length}>
+  <section class="edition-intro">
+    <div><p class="eyebrow">EDICIÓN METROPOLITANA</p><h1 data-edition-title>{title}</h1><p class="intro-copy">Lo que pasa y lo que viene en tu municipio.<br/>Cultura, comunidad, deportes y servicios, con fuentes oficiales.</p></div>
+    <div class="edition-stamp"><strong>06</strong><span>MUNICIPIOS<br/>UNA MISMA REGIÓN</span></div>
+  </section>
+
+  <section class="news-section" aria-labelledby="news-title">
+    <div class="section-heading"><h2 id="news-title">Noticias municipales</h2><span data-result-count role="status" aria-live="polite">{selectedArticles.length} {selectedArticles.length === 1 ? "noticia" : "noticias"}</span></div>
+    <form class="filter-bar" role="search" aria-label="Filtrar noticias" action="/">
+      <label>Municipio<select name="municipio" data-municipality><option value="">Todos los municipios</option>{MUNICIPALITIES.map((item) => <option value={item.slug} selected={initialMunicipality === item.slug}>{item.name}</option>)}</select></label>
+      <label>Categoría<select name="categoria" data-category><option value="">Todas las categorías</option>{NEWS_CATEGORIES.map((item) => <option value={item.slug} selected={initialCategory === item.slug}>{item.name}</option>)}</select></label>
+      <button type="button" data-reset>Restablecer filtros <span aria-hidden="true">↗</span></button>
+    </form>
+    <noscript><p class="no-script">Activa JavaScript para combinar los filtros. También puedes explorar por municipio en el menú y por categoría en el pie de página.</p></noscript>
+    <div class="news-grid">
+      {articles.map((article, index) => <article class="news-card" data-news-card data-municipality={article.data.municipality} data-category={article.data.category.id} hidden={!matches(article)}>
+        <a href={`/articles/${article.id}`} class="cover-link" tabindex="-1" aria-hidden="true">
+          {article.data.cover ? <Image src={article.data.cover} alt={article.data.covert_alt ?? article.data.title} width={720} loading={index === 0 ? "eager" : "lazy"} class="news-cover" /> : <div class="cover-placeholder"><span>PERIÓDICO <strong>ROJO</strong></span><small>{municipalityName(article.data.municipality)}</small></div>}
+        </a>
+        {article.data.cover && article.data.photoCredit && <p class="photo-credit">Foto: {article.data.photoCredit}</p>}
+        <div class="card-tags"><a href={`/municipios/${article.data.municipality}`}>{municipalityName(article.data.municipality)}</a><span>·</span><a href={`/categorias/${article.data.category.id}`}>{categoryName(article.data.category.id)}</a></div>
+        <h3><a href={`/articles/${article.id}`}>{article.data.title}</a></h3><p class="card-description">{article.data.description}</p>
+        <time datetime={new Date(article.data.publishedTime).toISOString()}>{formatDate(article.data.publishedTime)}</time>
+      </article>)}
+    </div>
+    <div class="empty-edition" data-empty-news hidden={selectedArticles.length > 0}>
+      <span class="empty-label">{articles.length === 0 ? "PRIMERA EDICIÓN" : "SIN RESULTADOS"}</span>
+      <h3>{articles.length === 0 ? "Estamos preparando las primeras noticias." : "Todavía no hay noticias con estos filtros."}</h3>
+      <p>{articles.length === 0 ? "Aquí encontrarás información revisada de los municipios de la región, con su fuente original y fotografías cuando estén disponibles." : "Prueba con otro municipio o categoría para explorar la información publicada."}</p>
+      <div class="edition-topics">{NEWS_CATEGORIES.map((item) => <a href={`/categorias/${item.slug}`}>{item.name}</a>)}</div>
+    </div>
+  </section>
+
+  <section class="agenda-section" aria-labelledby="agenda-title">
+    <div class="section-heading"><h2 id="agenda-title">Próximos eventos</h2><span class="section-caption">Fecha y lugar para que te organices</span></div>
+    <div class="agenda-grid">{events.map((article) => <article class="event-card" data-event-card data-municipality={article.data.municipality} data-category={article.data.category.id} data-event-date={article.data.eventDate} data-event-status={article.data.eventStatus ?? "programado"} hidden={!matches(article) || !isUpcomingEvent(article.data.eventDate, article.data.eventStatus)}>
+      <p class="eyebrow">{municipalityName(article.data.municipality)}</p><h3><a href={`/articles/${article.id}`}>{article.data.title}</a></h3><time datetime={article.data.eventDate}>{formatDate(article.data.eventDate!, true)}</time>
+      {article.data.eventLocation && <p>{article.data.eventLocation}</p>}{article.data.eventAdmission && <p>{article.data.eventAdmission}</p>}<a class="event-details" href={`/articles/${article.id}`}>Ver detalles <span aria-hidden="true">↗</span></a>
+    </article>)}</div>
+    <p class="empty-agenda" data-empty-events hidden={futureEvents.length > 0}>Por ahora no hay próximos eventos publicados para esta selección.</p>
+  </section>
+
+  <section class="coverage-section" aria-labelledby="coverage-title"><div class="section-heading"><h2 id="coverage-title">Explora tu municipio</h2><span class="section-caption">Nuestra cobertura inicial</span></div><div class="coverage-grid">{MUNICIPALITIES.map((item, index) => <a href={`/municipios/${item.slug}`}><span class="coverage-number">0{index + 1}</span><h3>{item.name}</h3><span class="coverage-link">Ver edición <span aria-hidden="true">↗</span></span></a>)}</div></section>
+  <aside class="source-note"><span aria-hidden="true">↳</span><p><strong>Información con origen claro.</strong> Cada noticia se revisa antes de publicarse e incluye un enlace a la fuente oficial. <a href="/about">Conoce nuestros criterios.</a></p></aside>
+</municipal-news>
+
+<script>
+  import { matchesEdition, isUpcomingEvent } from "@/lib/handlers/publication";
+  class MunicipalNews extends HTMLElement {
+    private timer?: ReturnType<typeof setInterval>;
+    private municipality!: HTMLSelectElement;
+    private category!: HTMLSelectElement;
+    private refresh = () => this.filter(false);
+    private change = () => this.filter(true);
+    private submit = (event: Event) => { event.preventDefault(); this.filter(true); };
+    private reset = () => { this.municipality.value = this.dataset.initialMunicipality ?? ""; this.category.value = this.dataset.initialCategory ?? ""; this.filter(true); };
+    private restore = () => {
+      const params = new URL(window.location.href).searchParams;
+      for (const [key, control, initial] of [["municipio", this.municipality, this.dataset.initialMunicipality], ["categoria", this.category, this.dataset.initialCategory]] as const) {
+        const value = params.has(key) ? (params.get(key) === "todos" ? "" : params.get(key) ?? "") : initial ?? "";
+        control.value = Array.from(control.options).some((option) => option.value === value) ? value : initial ?? "";
+      }
+      this.filter(false);
+    };
+    connectedCallback() {
+      this.municipality = this.querySelector<HTMLSelectElement>("[data-municipality]")!;
+      this.category = this.querySelector<HTMLSelectElement>("[data-category]")!;
+      this.municipality.addEventListener("change", this.change);
+      this.category.addEventListener("change", this.change);
+      this.querySelector("form")?.addEventListener("submit", this.submit);
+      this.querySelector("[data-reset]")?.addEventListener("click", this.reset);
+      window.addEventListener("popstate", this.restore);
+      this.restore();
+      this.timer = setInterval(this.refresh, 30_000);
+    }
+    disconnectedCallback() {
+      clearInterval(this.timer);
+      this.municipality.removeEventListener("change", this.change);
+      this.category.removeEventListener("change", this.change);
+      this.querySelector("form")?.removeEventListener("submit", this.submit);
+      this.querySelector("[data-reset]")?.removeEventListener("click", this.reset);
+      window.removeEventListener("popstate", this.restore);
+    }
+    private filter(updateUrl: boolean) {
+      const municipality = this.municipality.value, category = this.category.value;
+      const matches = (item: HTMLElement) => matchesEdition(item.dataset, municipality, category);
+      let count = 0, events = 0;
+      this.querySelectorAll<HTMLElement>("[data-news-card]").forEach((item) => { item.hidden = !matches(item); if (!item.hidden) count++; });
+      this.querySelectorAll<HTMLElement>("[data-event-card]").forEach((item) => {
+        item.hidden = !matches(item) || !isUpcomingEvent(item.dataset.eventDate, item.dataset.eventStatus);
+        if (!item.hidden) events++;
+      });
+      this.querySelector<HTMLElement>("[data-empty-news]")!.hidden = count > 0;
+      this.querySelector<HTMLElement>("[data-empty-events]")!.hidden = events > 0;
+      this.querySelector<HTMLElement>("[data-result-count]")!.textContent = `${count} ${count === 1 ? "noticia" : "noticias"}`;
+      this.querySelector<HTMLElement>("[data-edition-title]")!.textContent = municipality ? this.municipality.selectedOptions[0].text : category ? this.category.selectedOptions[0].text : "Tu ciudad. Tu información.";
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        for (const [key, value, initial] of [["municipio", municipality, this.dataset.initialMunicipality], ["categoria", category, this.dataset.initialCategory]] as const) {
+          if (value === initial) url.searchParams.delete(key); else url.searchParams.set(key, value || "todos");
+        }
+        history.replaceState({}, "", url);
+      }
+    }
+  }
+  if (!customElements.get("municipal-news")) customElements.define("municipal-news", MunicipalNews);
+</script>
+
+<style>
+.municipal-news{display:block}[hidden]{display:none!important}.edition-intro{display:flex;justify-content:space-between;align-items:center;gap:2rem;padding-block:3.5rem 3rem;border-bottom:1px solid var(--paper-rule)}.eyebrow{color:var(--paper-red);font-size:.65rem;font-weight:700;letter-spacing:.15em}.edition-intro h1{font-size:clamp(2rem,4vw,3.3rem);font-weight:650;line-height:1.13;letter-spacing:-.04em;margin-top:.6rem;max-width:45rem}.intro-copy{font-size:.9rem;line-height:1.75;color:var(--paper-muted);margin-top:1rem}.edition-stamp{display:flex;align-items:center;gap:1rem;border-left:1px solid var(--paper-rule);padding-left:2rem;flex-shrink:0}.edition-stamp strong{font-size:3.5rem;font-family:var(--font-serif);font-weight:400;line-height:1}.edition-stamp span{font-size:.6rem;line-height:1.8;letter-spacing:.1em}.news-section,.agenda-section,.coverage-section{padding-top:2rem}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-bottom:.9rem;border-bottom:2px solid var(--paper-ink)}.section-heading h2{font-size:1.35rem;font-weight:650;letter-spacing:-.02em}.section-heading>span{font-size:.7rem;color:var(--paper-muted)}.filter-bar{display:grid;grid-template-columns:1fr 1fr auto;gap:1.5rem;align-items:end;padding:1.25rem 0 1.5rem}.filter-bar label{display:flex;flex-direction:column;gap:.4rem;font-size:.65rem;text-transform:uppercase;font-weight:700;letter-spacing:.08em}.filter-bar select{background:transparent;border:1px solid var(--paper-rule);border-radius:0;padding:.7rem 2rem .7rem .75rem;min-width:0;width:100%;font-size:.8rem;font-weight:400;text-transform:none;letter-spacing:normal;color:var(--paper-ink)}.filter-bar button{background:transparent;font-size:.72rem;border-bottom:1px solid var(--paper-rule);padding:.75rem 0;cursor:pointer;color:var(--paper-muted)}.filter-bar button:hover{color:var(--paper-red)}.filter-bar button span{margin-left:1rem}.news-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2rem 1.5rem}.news-card{border-bottom:1px solid var(--paper-rule);padding-bottom:1.5rem}.cover-link{display:block;aspect-ratio:16/10;overflow:hidden;background:#efebe4}.news-cover{width:100%;height:100%;object-fit:cover;transition:transform .3s}.cover-link:hover .news-cover{transform:scale(1.025)}.cover-placeholder{display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;height:100%;gap:.6rem;border-top:4px solid var(--paper-red)}.cover-placeholder span{font-family:var(--font-serif);font-size:1.3rem}.cover-placeholder strong{color:var(--paper-red)}.cover-placeholder small{font-size:.7rem;color:var(--paper-muted)}.photo-credit{font-size:.6rem;color:var(--paper-muted);margin-top:.3rem}.card-tags{display:flex;flex-wrap:wrap;gap:.4rem;font-size:.62rem;color:var(--paper-red);margin-top:1rem;font-weight:700}.news-card h3{font-family:var(--font-serif);font-size:1.3rem;font-weight:650;line-height:1.25;margin-top:.55rem}.news-card h3 a:hover,.event-card h3 a:hover{text-decoration:underline}.card-description{font-size:.8rem;line-height:1.6;margin-top:.6rem;color:var(--paper-muted)}.news-card time{display:block;font-size:.65rem;color:var(--paper-muted);margin-top:1rem}.empty-edition{padding:3rem 2rem;text-align:center;background:#f0ede6;border:1px solid var(--paper-rule)}.empty-label{font-size:.6rem;color:var(--paper-red);letter-spacing:.2em;font-weight:700}.empty-edition h3{font-family:var(--font-serif);font-size:1.75rem;line-height:1.2;margin:1rem auto;max-width:28rem}.empty-edition>p{font-size:.85rem;line-height:1.7;max-width:32rem;margin:auto;color:var(--paper-muted)}.edition-topics{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem 1.5rem;margin-top:1.8rem;font-size:.7rem}.edition-topics a:hover{color:var(--paper-red);text-decoration:underline}.agenda-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.5rem}.event-card{border-bottom:1px solid var(--paper-rule);padding:1.5rem 0}.event-card h3{font-family:var(--font-serif);font-size:1.2rem;font-weight:600;margin-block:.6rem}.event-card time,.event-card>p:not(.eyebrow){display:block;font-size:.75rem;line-height:1.7;color:var(--paper-muted)}.event-details{display:inline-block;margin-top:1rem;font-size:.7rem;color:var(--paper-red);font-weight:700}.empty-agenda{font-size:.8rem;padding-block:1.5rem;color:var(--paper-muted);border-bottom:1px solid var(--paper-rule)}.coverage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-left:1px solid var(--paper-rule)}.coverage-grid>a{padding:1.25rem 1.5rem;border-right:1px solid var(--paper-rule);border-bottom:1px solid var(--paper-rule)}.coverage-number{font-size:.6rem;color:var(--paper-red);font-weight:700;letter-spacing:.1em}.coverage-grid h3{font-family:var(--font-serif);font-size:1.1rem;font-weight:600;margin:.5rem 0 1rem;line-height:1.4}.coverage-link{font-size:.65rem;color:var(--paper-muted);display:flex;justify-content:space-between}.coverage-grid>a:hover{background:#f0ede6}.coverage-grid>a:hover .coverage-link{color:var(--paper-red)}.source-note{display:flex;align-items:center;gap:1.3rem;border-block:1px solid var(--paper-rule);padding:1.5rem 0;margin-top:2.5rem}.source-note>span{font-size:2rem;color:var(--paper-red)}.source-note p{font-size:.75rem;color:var(--paper-muted);line-height:1.7}.source-note strong{color:var(--paper-ink)}.source-note a{text-decoration:underline}.no-script{font-size:.8rem;color:var(--paper-muted);padding-block:1rem}
+@media(max-width:800px){.edition-stamp{display:none}.news-grid,.agenda-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-bar{gap:1rem;grid-template-columns:1fr 1fr}.filter-bar button{grid-column:1/-1;justify-self:start;padding-top:0}.section-caption{display:none}}
+@media(max-width:520px){.edition-intro{padding-block:2rem}.news-grid,.agenda-grid{grid-template-columns:1fr}.coverage-grid{grid-template-columns:1fr 1fr}.coverage-grid>a{padding:1rem}.coverage-grid h3{font-size:1rem}.empty-edition{padding:2rem 1rem}.empty-edition h3{font-size:1.4rem}.filter-bar{grid-template-columns:1fr;gap:.8rem}.section-heading h2{font-size:1.2rem}}
+@media(prefers-reduced-motion:reduce){.news-cover{transition:none}}
+</style>

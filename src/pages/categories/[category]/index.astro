@@ -1,13 +1,5 @@
 ---
-import { categoriesHandler } from "@/lib/handlers/categories";
-
-export function getStaticPaths() {
-  const categories = categoriesHandler.allCategories();
-  return categories.map((category) => ({ params: { category: category.id } }));
-}
-
-const { category } = Astro.params;
+import { NEWS_CATEGORIES } from "@/lib/config/municipal";
+export function getStaticPaths() { return NEWS_CATEGORIES.map((item) => ({ params: { category: item.slug } })); }
+return Astro.redirect(`/categorias/${Astro.params.category}`);
 ---
-
-<!-- TODO: show last articles and fix pagination -->
-<meta http-equiv="refresh" content={`0; url=${`/categories/${category}/1`}`} />

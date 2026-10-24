@@ -31,6 +31,7 @@ if (!entry) {
             new PagefindUI({
               element: "#search",
               showSubResults: true,
+              translations: { placeholder: "Buscar noticias", zero_results: "No hay resultados para [SEARCH_TERM]", one_result: "[COUNT] resultado para [SEARCH_TERM]", many_results: "[COUNT] resultados para [SEARCH_TERM]", clear_search: "Limpiar", load_more: "Ver más resultados", searching: "Buscando…" },
               showImages: false,
               autofocus: true,
             });
@@ -44,7 +45,7 @@ if (!entry) {
             const query = params.get("q");
 
             if (clearButton) {
-              clearButton.textContent = "× Clear";
+              clearButton.textContent = "× Limpiar";
             }
             if (query && input) {
               input.value = query;

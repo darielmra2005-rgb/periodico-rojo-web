@@ -1,5 +1,6 @@
 ---
 import { Image } from "astro:assets";
+import fallbackImage from "@/assets/images/periodico-rojo.svg";
 import type { CollectionEntry } from "astro:content";
 import { getDateDistance, normalizeDate } from "@/lib/utils/date";
 import Divider from "../bases/divider.astro";
@@ -28,7 +29,7 @@ const { article, isLast } = Astro.props;
   >
     <div class="w-full lg:w-60 aspect-video">
       <Image
-        src={article.data.cover}
+        src={article.data.cover ?? fallbackImage}
         alt={article.data.covert_alt
           ? article.data.covert_alt
           : article.data.title}

@@ -1,115 +1,25 @@
 ---
-import { Image, Picture } from "astro:assets";
+import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
-import { formatDate, normalizeDate } from "@/lib/utils/date";
-import ResourcesAdd from "@/assets/svgs/resources-add.astro";
-import Time04 from "@/assets/svgs/time-04.astro";
-import Calendar04 from "@/assets/svgs/calendar-04.astro";
-import Divider from "@/components/bases/divider.astro";
-import { categoriesHandler } from "@/lib/handlers/categories";
+import { municipalityName, categoryName } from "@/lib/config/municipal";
 import { authorsHandler } from "@/lib/handlers/authors";
 import Share from "@/components/elements/share.astro";
-
-type Props = {
-  article: CollectionEntry<"articles">;
-  readingTime: string;
-};
-
-const { article, readingTime } = Astro.props;
-
-const category = categoriesHandler.oneCategory(article.data.category.id);
-const authors = authorsHandler.getAuthors(article.data.authors);
+type Props = { article: CollectionEntry<"articles">; readingTime: string };
+const { article } = Astro.props;
+const data = article.data;
+const authors = authorsHandler.getAuthors(data.authors);
+const date = (value: string | Date) => new Intl.DateTimeFormat("es-MX", { dateStyle: "long", timeStyle: "short", timeZone: "America/Monterrey" }).format(new Date(value));
 ---
-
-<section
-  class="mb-8 flex flex-col lg:flex-col-reverse border-b border-b-base-300 lg:border-none pb-4 pt-0 lg:pt-6"
->
-  <div
-    class="container px-0 max-w-5xl lg:mt-4 overflow-hidden aspect-[20/9] lg:rounded-md"
-  >
-    <Picture
-      src={article.data.cover}
-      alt="article"
-      layout="full-width"
-      loading={"eager"}
-      formats={["avif", "webp"]}
-      class="w-full h-full object-center"
-    />
-  </div>
-  <div class="container my-4 max-w-5xl lg:hidden flex items-center gap-2">
-    <ResourcesAdd size="16" />
-    <a href={`/categories/${category.data.path}`} class="a-01 font-semibold"
-      >{category.data.title}</a
-    >
-  </div>
-  <div class="container max-w-5xl">
-    <h1 class="text-3xl lg:text-4xl font-bold text-left text-pretty">
-      {article.data.title}
-    </h1>
-    <div class="flex flex-col gap-4 items-start mt-2 lg:mt-6 text-sm">
-      <div class="text-base-content/70 flex items-center gap-2">
-        <span class="hidden lg:flex items-center gap-1">
-          <ResourcesAdd size="15" />
-          <a href={`/categories/${category.id}`} class="a-01 font-semibold"
-            >{category.data.title}</a
-          >
-        </span>
-        <Divider responsive />
-        <span class="flex items-center gap-1">
-          <Calendar04 size="15" />
-          <time
-            class="hidden lg:block"
-            datetime={normalizeDate(article.data.publishedTime)}
-            >{
-              formatDate(normalizeDate(article.data.publishedTime), "long")
-            }</time
-          >
-          <time
-            class="block lg:hidden"
-            datetime={normalizeDate(article.data.publishedTime)}
-            >{
-              formatDate(normalizeDate(article.data.publishedTime), "short")
-            }</time
-          >
-        </span>
-        <Divider />
-        <span class="flex items-center gap-1">
-          <Time04 size="15" />
-          <span>{readingTime}</span>
-        </span>
-      </div>
-      <!-- TODO: fix name, href, avatar of author -->
-      <div class="w-full flex flex-wrap gap-2 items-center justify-between">
-        <div class="flex flex-wrap gap-4">
-          {
-            authors.map((author) => (
-              <div class="flex items-center gap-2">
-                <a
-                  href={`/authors/${author.id}`}
-                  class="flex items-center gap-2"
-                >
-                  <div class="avatar">
-                    <div class="w-8 rounded-full">
-                      <Image
-                        src={author.data.avatar}
-                        alt="author"
-                        width={48}
-                        height={48}
-                        loading={"eager"}
-                        format="webp"
-                        layout="constrained"
-                        quality={80}
-                      />
-                    </div>
-                  </div>
-                  <span class="font-bold capitalize">{author.data.name}</span>
-                </a>
-              </div>
-            ))
-          }
-        </div>
-        <Share text={article.data.title} />
-      </div>
-    </div>
-  </div>
+<section class="container article-heading">
+  <a class="back" href={data.municipality ? `/municipios/${data.municipality}` : "/"}>← Volver a noticias</a>
+  <div class="tags"><a href={`/municipios/${data.municipality}`}>{municipalityName(data.municipality)}</a><span>·</span><a href={`/categorias/${data.category.id}`}>{categoryName(data.category.id)}</a></div>
+  <h1>{data.title}</h1><p class="description">{data.description}</p>
+  <p class="byline">{authors.map((author) => author.data.name).join(", ")} · Publicado el <time datetime={new Date(data.publishedTime).toISOString()}>{date(data.publishedTime)}</time></p>
+  {data.cover && <figure><Image src={data.cover} alt={data.covert_alt ?? data.title} width={1200} loading="eager" class="article-photo" />{data.photoCredit && <figcaption>Foto: {data.photoCredit}</figcaption>}</figure>}
+  {data.eventDate && <aside class="event-info"><strong>{data.eventStatus === "cancelado" ? "Aviso: evento cancelado" : "Datos del evento"}</strong><p>Fecha: <time datetime={data.eventDate}>{date(data.eventDate)}</time></p>{data.eventLocation && <p>Lugar: {data.eventLocation}</p>}{data.eventAdmission && <p>Acceso: {data.eventAdmission}</p>}</aside>}
+  {data.sourceUrl && <p class="official-source">Fuente oficial: <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer">{data.sourceName ?? "Publicación original"} ↗</a></p>}
+  <Share text={data.title} />
 </section>
+<style>
+.article-heading{max-width:960px;padding-top:2rem;margin-bottom:2rem}.back{font-size:.75rem;color:var(--paper-muted)}.tags{display:flex;gap:.5rem;color:var(--paper-red);font-size:.7rem;font-weight:700;margin-top:2rem}h1{font-family:var(--font-serif);font-size:clamp(2rem,4vw,3rem);font-weight:700;line-height:1.15;letter-spacing:-.03em;margin-top:.8rem}.description{font-size:1.1rem;color:var(--paper-muted);line-height:1.6;margin-top:1rem}.byline{font-size:.7rem;color:var(--paper-muted);line-height:1.8;margin-block:1.5rem}figure{margin-block:1.5rem}.article-photo{width:100%;height:auto}figcaption{font-size:.65rem;color:var(--paper-muted);margin-top:.4rem}.event-info{padding:1.2rem 1.5rem;border-left:3px solid var(--paper-red);background:#f0ede6;margin-block:1.5rem;font-size:.8rem;line-height:1.9}.official-source{font-size:.75rem;border-block:1px solid var(--paper-rule);padding-block:1rem;margin-bottom:1rem}.official-source a{text-decoration:underline;text-underline-offset:3px}
+</style>
