@@ -3,6 +3,7 @@ import { Image } from "astro:assets";
 import { articlesHandler } from "@/lib/handlers/articles";
 import { MUNICIPALITIES, NEWS_CATEGORIES, municipalityName, categoryName } from "@/lib/config/municipal";
 import { isUpcomingEvent, matchesEdition } from "@/lib/handlers/publication";
+import MunicipalWeather from "./weather.astro";
 type Props = { initialMunicipality?: string; initialCategory?: string };
 const { initialMunicipality = "", initialCategory = "" } = Astro.props;
 const articles = articlesHandler.allArticles();
@@ -56,6 +57,7 @@ const formatDate = (date: string | Date, event = false) => new Intl.DateTimeForm
     <p class="empty-agenda" data-empty-events hidden={futureEvents.length > 0}>Por ahora no hay próximos eventos publicados para esta selección.</p>
   </section>
 
+  <MunicipalWeather initialMunicipality={initialMunicipality} />
   <section class="coverage-section" aria-labelledby="coverage-title"><div class="section-heading"><h2 id="coverage-title">Explora tu municipio</h2><span class="section-caption">Nuestra cobertura inicial</span></div><div class="coverage-grid">{MUNICIPALITIES.map((item, index) => <a href={`/municipios/${item.slug}`}><span class="coverage-number">0{index + 1}</span><h3>{item.name}</h3><span class="coverage-link">Ver edición <span aria-hidden="true">↗</span></span></a>)}</div></section>
   <aside class="source-note"><span aria-hidden="true">↳</span><p><strong>Información con origen claro.</strong> Cada noticia se revisa antes de publicarse e incluye un enlace a la fuente oficial. <a href="/about">Conoce nuestros criterios.</a></p></aside>
 </municipal-news>
@@ -66,6 +68,7 @@ const formatDate = (date: string | Date, event = false) => new Intl.DateTimeForm
     private timer?: ReturnType<typeof setInterval>;
     private municipality!: HTMLSelectElement;
     private category!: HTMLSelectElement;
+    private weatherMunicipality?: string;
     private refresh = () => this.filter(false);
     private change = () => this.filter(true);
     private submit = (event: Event) => { event.preventDefault(); this.filter(true); };
@@ -99,6 +102,10 @@ const formatDate = (date: string | Date, event = false) => new Intl.DateTimeForm
     }
     private filter(updateUrl: boolean) {
       const municipality = this.municipality.value, category = this.category.value;
+      if (this.weatherMunicipality !== municipality) {
+        this.weatherMunicipality = municipality;
+        this.dispatchEvent(new CustomEvent("municipality-change", { detail: municipality }));
+      }
       const matches = (item: HTMLElement) => matchesEdition(item.dataset, municipality, category);
       let count = 0, events = 0;
       this.querySelectorAll<HTMLElement>("[data-news-card]").forEach((item) => { item.hidden = !matches(item); if (!item.hidden) count++; });
