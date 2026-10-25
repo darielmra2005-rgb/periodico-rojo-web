@@ -23,3 +23,5 @@ Referencias consultadas el 24 de octubre de 2026:
 - [Funciones Node de Vercel](https://vercel.com/docs/functions/runtimes/node-js)
 
 Validación: `node --experimental-strip-types --test tests/*.test.ts`, `npm run astro -- check` y `npm run build`. El desarrollo con `astro dev` sirve la interfaz estática; la función `/api/clima` corre en Vercel.
+
+La entrada pública usa la firma Node request/response. TypeScript reescribe las extensiones relativas `.ts` a `.js` al emitir código para Vercel; las pruebas locales también verifican ese punto de entrada.
