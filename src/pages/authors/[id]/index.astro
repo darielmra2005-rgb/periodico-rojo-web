@@ -1,16 +1,5 @@
 ---
 import { authorsHandler } from "@/lib/handlers/authors";
-
-export const getStaticPaths = async () => {
-  const authors = authorsHandler.allAuthors();
-
-  return authors.map((author) => ({
-    params: { id: author.id },
-    props: { author },
-  }));
-};
-
-const { author } = Astro.props;
+export function getStaticPaths() { return authorsHandler.allAuthors().map((author) => ({ params: { id: author.id } })); }
+return Astro.redirect("/about");
 ---
-
-<meta http-equiv="refresh" content=`0;url=/authors/${author.id}/1` />

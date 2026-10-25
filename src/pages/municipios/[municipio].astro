@@ -1,0 +1,12 @@
+---
+import BaseLayout from "@/layouts/base.astro";
+import MunicipalNews from "@/components/municipal/news.astro";
+import { MUNICIPALITIES } from "@/lib/config/municipal";
+import { getEntry } from "astro:content";
+export function getStaticPaths() { return MUNICIPALITIES.map((municipality) => ({ params: { municipio: municipality.slug }, props: { municipality } })); }
+const { municipality } = Astro.props;
+const home = await getEntry("views", "home");
+if (!home) return Astro.redirect("/404");
+const entry = { ...home, id: `municipio-${municipality.slug}`, data: { ...home.data, title: `Noticias de ${municipality.name}`, description: `Noticias, eventos y avisos de ${municipality.name}, con revisión editorial y fuentes oficiales.` } };
+---
+<BaseLayout entry={entry}><MunicipalNews initialMunicipality={municipality.slug} /></BaseLayout>

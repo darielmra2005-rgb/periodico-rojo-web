@@ -1,7 +1,7 @@
 import { render, type CollectionEntry } from "astro:content";
 import { authorsHandler } from "@/lib/handlers/authors";
 import { SITE } from "@/lib/config";
-import defaultImage from "@/assets/images/default-image.jpg";
+import defaultImage from "@/assets/images/periodico-rojo.svg";
 import type { ArticleMeta, Meta } from "@/lib/types";
 import { capitalizeFirstLetter } from "@/lib/utils/letter";
 import { normalizeDate } from "@/lib/utils/date";
@@ -30,7 +30,7 @@ export const getMeta = async (
         title: `${capitalizeFirstLetter(collection.data.title)} - ${SITE.title}`,
         metaTitle: capitalizeFirstLetter(collection.data.title),
         description: collection.data.description,
-        ogImage: collection.data.cover.src,
+        ogImage: collection.data.cover?.src ?? defaultImage.src,
         ogImageAlt: collection.data.covert_alt || collection.data.title,
         publishedTime: normalizeDate(collection.data.publishedTime),
         lastModified: remarkPluginFrontmatter.lastModified,

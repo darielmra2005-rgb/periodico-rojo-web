@@ -1,11 +1,18 @@
 ---
-import TopHeader from "../elements/top-header.astro";
-import Navbar from "../elements/navbar.astro";
+import { MUNICIPALITIES } from "@/lib/config/municipal";
+const current = Astro.url.pathname.replace(/\/$/, "");
 ---
-
-<header
-  class="border-b border-primary-content/80 dark:border-primary-content/20"
->
-  <TopHeader />
-  <Navbar />
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<header class="paper-header">
+  <div class="container edition-bar"><span>Nuevo León · México</span><a href="/about">Periodismo local, fuentes claras</a></div>
+  <div class="container masthead">
+    <a href="/" class="wordmark" aria-label="Periódico Rojo, inicio">PERIÓDICO <span>ROJO</span><small>LA INFORMACIÓN CERCA DE TI</small></a>
+    <p>Noticias y eventos de la<br/><strong>zona metropolitana de Monterrey</strong></p>
+  </div>
+  <nav class="municipal-nav" aria-label="Municipios">
+    <div class="container"><a href="/" aria-current={current === "" ? "page" : undefined}>Portada</a>{MUNICIPALITIES.map((item) => <a href={`/municipios/${item.slug}`} aria-current={current === `/municipios/${item.slug}` ? "page" : undefined}>{item.name}</a>)}</div>
+  </nav>
 </header>
+<style>
+.paper-header{background:var(--paper-bg);color:var(--paper-ink)}.edition-bar{display:flex;justify-content:space-between;gap:1rem;padding-block:.7rem;border-bottom:1px solid var(--paper-rule);font-size:.72rem;letter-spacing:.03em}.edition-bar a:hover{text-decoration:underline}.masthead{display:flex;justify-content:space-between;align-items:center;padding-block:2.2rem;gap:1rem}.wordmark{font-family:var(--font-serif);font-weight:800;font-size:clamp(1.9rem,5vw,3.9rem);line-height:1;letter-spacing:-.055em}.wordmark span{color:var(--paper-red)}.wordmark small{display:block;font-family:var(--font-sans);font-size:.6rem;letter-spacing:.28em;margin-top:1rem;font-weight:600}.masthead p{font-size:.8rem;text-align:right;line-height:1.7;color:var(--paper-muted)}.municipal-nav{border-block:1px solid var(--paper-ink)}.municipal-nav>div{display:flex;align-items:stretch;gap:1.6rem;overflow-x:auto}.municipal-nav a{flex-shrink:0;padding-block:.9rem;font-size:.75rem;font-weight:700;border-bottom:3px solid transparent;white-space:nowrap}.municipal-nav a:hover,.municipal-nav a[aria-current]{border-color:var(--paper-red);color:var(--paper-red)}.skip-link{position:fixed;top:-100px;left:1rem;z-index:100;background:#fff;color:#111;padding:1rem}.skip-link:focus{top:1rem}@media(max-width:640px){.masthead p{display:none}.masthead{padding-block:1.7rem}.edition-bar a{font-size:.65rem}.municipal-nav>div{gap:1.3rem}}
+</style>

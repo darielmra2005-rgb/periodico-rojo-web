@@ -1,19 +1,8 @@
 ---
 import BaseLayout from "@/layouts/base.astro";
+import MunicipalNews from "@/components/municipal/news.astro";
 import { getEntry } from "astro:content";
-import Headlines from "@/pages/_home/headlines.astro";
-import LatestNews from "@/pages/_home/latestNews.astro";
-import Authors from "@/pages/_home/authors.astro";
-
 const entry = await getEntry("views", "home");
-
-if (!entry) {
-  return Astro.redirect("/404");
-}
+if (!entry) return Astro.redirect("/404");
 ---
-
-<BaseLayout entry={entry}>
-  <Headlines />
-  <LatestNews />
-  <Authors />
-</BaseLayout>
+<BaseLayout entry={entry}><MunicipalNews /></BaseLayout>

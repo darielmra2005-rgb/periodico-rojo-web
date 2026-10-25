@@ -1,0 +1,12 @@
+---
+import BaseLayout from "@/layouts/base.astro";
+import MunicipalNews from "@/components/municipal/news.astro";
+import { NEWS_CATEGORIES } from "@/lib/config/municipal";
+import { getEntry } from "astro:content";
+export function getStaticPaths() { return NEWS_CATEGORIES.map((category) => ({ params: { categoria: category.slug }, props: { category } })); }
+const { category } = Astro.props;
+const home = await getEntry("views", "home");
+if (!home) return Astro.redirect("/404");
+const entry = { ...home, id: `categoria-${category.slug}`, data: { ...home.data, title: category.name, description: `${category.name}: noticias de los municipios de la zona metropolitana de Monterrey.` } };
+---
+<BaseLayout entry={entry}><MunicipalNews initialCategory={category.slug} /></BaseLayout>

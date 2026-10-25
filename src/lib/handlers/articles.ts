@@ -1,13 +1,13 @@
 import { getCollection } from "astro:content";
+import { isPublishedMunicipalArticle } from "./publication";
 
 const articlesCollection = (
   await getCollection("articles", ({ data }) => {
-    return data.isDraft !== true && new Date(data.publishedTime) < new Date();
+    return isPublishedMunicipalArticle(data);
   })
 ).sort((a, b) =>
-  new Date(b.data.publishedTime)
-    .toISOString()
-    .localeCompare(new Date(a.data.publishedTime).toISOString())
+  (b.data.sourcePublishedDate ?? "").localeCompare(a.data.sourcePublishedDate ?? "") ||
+  new Date(b.data.publishedTime).getTime() - new Date(a.data.publishedTime).getTime()
 );
 
 export const articlesHandler = {
@@ -17,11 +17,7 @@ export const articlesHandler = {
     const article = articlesCollection.filter(
       (article) => article.data.isMainHeadline === true
     )[0];
-    if (!article)
-      throw new Error(
-        "Please ensure there is at least one item to display for the main headline."
-      );
-    return article;
+    return article ?? articlesCollection[0];
   },
 
   subHeadlines: () => {
@@ -30,14 +26,10 @@ export const articlesHandler = {
       .filter(
         (article) =>
           article.data.isSubHeadline === true &&
-          mainHeadline.id !== article.id
+          mainHeadline?.id !== article.id
       )
       .slice(0, 4);
 
-    if (subHeadlines.length === 0)
-      throw new Error(
-        "Please ensure there is at least one item to display for the sub headlines."
-      );
     return subHeadlines;
   },
 };

@@ -1,7 +1,8 @@
+import { es } from "date-fns/locale";
 import { formatDistanceToNow, parseISO, format } from "date-fns";
 
-const FORMAT_LONG = "EEEE, MMMM d, yyyy h:mm a zz";
-const FORMAT_SHORT = "MMMM dd, yyyy zz";
+const FORMAT_LONG = "EEEE d 'de' MMMM 'de' yyyy";
+const FORMAT_SHORT = "d 'de' MMMM 'de' yyyy";
 
 const dateCache = new Map<string, Date>();
 
@@ -9,6 +10,7 @@ const dateCache = new Map<string, Date>();
 export const getDateDistance = (date: string) =>
   formatDistanceToNow(parseISO(date), {
     addSuffix: true,
+    locale: es,
   });
 
 
@@ -41,5 +43,5 @@ export const formatDate = (
   const parsedDate = getParsedDate(dateString);
 
   // Format the date based on the requested format
-  return format(parsedDate, formatType === "short" ? FORMAT_SHORT : FORMAT_LONG);
+  return format(parsedDate, formatType === "short" ? FORMAT_SHORT : FORMAT_LONG, { locale: es });
 };

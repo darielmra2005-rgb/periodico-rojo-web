@@ -73,3 +73,7 @@
     @apply hover:underline decoration-primary;
   }
 }
+
+:root { --paper-bg:#f9f7f3; --paper-ink:#252522; --paper-muted:#66645f; --paper-rule:#dcd8d0; --paper-red:#ac202b; }
+body { background:var(--paper-bg); color:var(--paper-ink); }
+:focus-visible { outline:3px solid var(--paper-red); outline-offset:4px; }

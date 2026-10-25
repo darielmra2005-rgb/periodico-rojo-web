@@ -1,7 +1,8 @@
 import { getCollection } from "astro:content";
 import { articlesHandler } from "./articles";
+import { NEWS_CATEGORIES } from "../config/municipal";
 
-const categoriesCollection = await getCollection('categories');
+const categoriesCollection = (await getCollection('categories')).filter((category) => NEWS_CATEGORIES.some((item) => item.slug === category.id));
 
 export const categoriesHandler = {
     allCategories: () => categoriesCollection.sort((a, b) => a.data.title.localeCompare(b.data.title)),

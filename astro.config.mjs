@@ -12,7 +12,7 @@ import pagefind from "astro-pagefind";
 
 const { RUN_KEYSTATIC } = loadEnv(import.meta.env.MODE, process.cwd(), "");
 
-const integrations = [mdx(), sitemap(), pagefind()];
+const integrations = [mdx(), sitemap({ filter: (page) => { const path = new URL(page).pathname; return !/^\/(authors|categories|search)(\/|$)/.test(path) && !/^\/articles(\/(\d+)?)?\/?$/.test(path); } }), pagefind()];
 
 if (RUN_KEYSTATIC === "true") {
   integrations.push(react());

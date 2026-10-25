@@ -1,16 +1,16 @@
 import rss from "@astrojs/rss";
-import { getCollection } from "astro:content";
+import { articlesHandler } from "../lib/handlers/articles";
 import { SITE } from "../lib/config";
 
 export async function GET(context) {
-  const articles = await getCollection("articles");
+  const articles = articlesHandler.allArticles();
   return rss({
     title: SITE.title,
     description: SITE.description,
     site: context.site,
     items: articles.map((article) => ({
       title: article.data.title,
-      pubDate: article.data.publishedTime,
+      pubDate: new Date(article.data.publishedTime),
       description: article.data.description,
       link: `/articles/${article.id}/`,
     })),
