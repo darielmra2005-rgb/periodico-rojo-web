@@ -5,7 +5,7 @@ export const OFFICIAL_SOURCES = {
   "san-nicolas": { name: "Gobierno de San Nicolás de los Garza", hostname: "sanicolas.gob.mx", portal: "https://sanicolas.gob.mx/sitio_oficial_pc" },
   monterrey: { name: "Gobierno de Monterrey", hostname: "monterrey.gob.mx", portal: "https://www.monterrey.gob.mx/noticias/" },
   escobedo: { name: "Gobierno de General Escobedo", hostname: "escobedo.gob.mx", portal: "https://escobedo.gob.mx/?p=notas" },
-  "san-pedro": { name: "Gobierno de San Pedro Garza García", hostname: "sanpedro.gob.mx", portal: "https://www.sanpedro.gob.mx/" },
+  "san-pedro": { name: "Gobierno de San Pedro Garza García", hostname: "sanpedro.gob.mx", portal: "https://www.sanpedro.gob.mx/", additionalHostnames: ["blog.sanpedro.gob.mx"] },
   guadalupe: { name: "Gobierno de Guadalupe", hostname: "guadalupe.gob.mx", portal: "https://guadalupe.gob.mx/" },
 } as const;
 
@@ -14,8 +14,9 @@ export function isOfficialSource(sourceUrl: string | undefined, municipality: st
   try {
     const url = new URL(sourceUrl);
     const source = OFFICIAL_SOURCES[municipality as keyof typeof OFFICIAL_SOURCES];
-    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
-    return url.protocol === "https:" && !url.username && !url.password && !url.port && hostname === source.hostname;
+    const hostname = url.hostname.toLowerCase();
+    const allowed = [source.hostname, `www.${source.hostname}`, ...("additionalHostnames" in source ? source.additionalHostnames : [])];
+    return url.protocol === "https:" && !url.username && !url.password && !url.port && allowed.includes(hostname);
   } catch {
     return false;
   }

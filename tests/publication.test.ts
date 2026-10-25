@@ -41,6 +41,24 @@ test("a valid URL or official-looking name cannot bypass the source restriction"
   }
 });
 
+test("San Pedro's verified news blog is accepted only for its own municipality and exact hostname", () => {
+  const sourceUrl = "https://blog.sanpedro.gob.mx/news/comunicado-de-prueba/";
+  const data = { ...reviewedNews, municipality: "san-pedro", sourceUrl };
+  assert.equal(isPublishedMunicipalArticle(data, now), true);
+  for (const municipality of ["garcia", "san-nicolas", "monterrey", "escobedo", "guadalupe"]) {
+    assert.equal(isPublishedMunicipalArticle({ ...data, municipality }, now), false);
+  }
+  for (const sourceUrl of [
+    "https://blog.sanpedro.gob.mx.example.org/news/",
+    "https://fakeblog.sanpedro.gob.mx/news/",
+    "https://www.blog.sanpedro.gob.mx/news/",
+    "https://otro.sanpedro.gob.mx/news/",
+    "https://usuario@blog.sanpedro.gob.mx/news/",
+    "https://blog.sanpedro.gob.mx:8443/news/",
+    "http://blog.sanpedro.gob.mx/news/",
+  ]) assert.equal(isPublishedMunicipalArticle({ ...data, sourceUrl }, now), false, sourceUrl);
+});
+
 test("municipality and topic filters intersect rather than adding unrelated stories", () => {
   const news = [
     { municipality: "garcia", category: "cultura" },
