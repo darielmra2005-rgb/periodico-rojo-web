@@ -25,11 +25,17 @@ type Step = { time: string; data: { instant: { details: Details }; next_1_hours?
 export type MetForecast = { properties: { meta: { updated_at: string }; timeseries: Step[] } };
 export type WeatherCondition = { label: string; icon: string };
 export type WeatherDay = { date: string; minimum: number; maximum: number; precipitation: number | null; partial: boolean; condition: WeatherCondition };
+export type WeatherPeriod = {
+  time: string; temperature: number; wind: number | null; condition: WeatherCondition;
+  // Rain and the weather symbol describe this interval, not the instant temperature.
+  periodHours: 1 | 6 | null; precipitation: number | null;
+};
 export type MunicipalForecast = {
   municipality: WeatherMunicipality; name: string; latitude: number; longitude: number;
   updatedAt: string; computedAt: string;
   current: { temperature: number; time: string; wind: number | null; condition: WeatherCondition };
   days: WeatherDay[];
+  periods: WeatherPeriod[];
 };
 
 export function conditionFor(symbol = ""): WeatherCondition {
@@ -101,8 +107,22 @@ export function summarizeForecast(raw: MetForecast, municipality: WeatherMunicip
   });
   if (days.length !== 7 || days[0].date !== today) throw new Error("Incomplete seven-day forecast");
   for (let index = 1; index < days.length; index++) if (Date.parse(days[index].date) - Date.parse(days[index - 1].date) !== 24 * HOUR) throw new Error("Missing forecast day");
+  const dates = new Set(days.map((day) => day.date));
+  const periods: WeatherPeriod[] = valid
+    .filter((step) => Date.parse(step.time) >= Math.floor(now.getTime() / HOUR) * HOUR && dates.has(localDay(new Date(step.time))))
+    .map((step) => {
+      const period = step.data.next_1_hours ?? step.data.next_6_hours;
+      const amount = period?.details?.precipitation_amount;
+      return {
+        time: step.time, temperature: round(step.data.instant.details.air_temperature!),
+        wind: finite(step.data.instant.details.wind_speed) ? round(step.data.instant.details.wind_speed * 3.6) : null,
+        condition: conditionFor(period?.summary?.symbol_code),
+        periodHours: step.data.next_1_hours ? 1 : step.data.next_6_hours ? 6 : null,
+        precipitation: finite(amount) && amount >= 0 ? amount : null,
+      };
+    });
   return {
     municipality, ...WEATHER_LOCATIONS[municipality], updatedAt: new Date(updated).toISOString(), computedAt: now.toISOString(),
-    current: { temperature: round(current.data.instant.details.air_temperature!), time: current.time, wind: finite(current.data.instant.details.wind_speed) ? round(current.data.instant.details.wind_speed * 3.6) : null, condition: conditionFor((current.data.next_1_hours ?? current.data.next_6_hours)?.summary?.symbol_code) }, days,
+    current: { temperature: round(current.data.instant.details.air_temperature!), time: current.time, wind: finite(current.data.instant.details.wind_speed) ? round(current.data.instant.details.wind_speed * 3.6) : null, condition: conditionFor((current.data.next_1_hours ?? current.data.next_6_hours)?.summary?.symbol_code) }, days, periods,
   };
 }

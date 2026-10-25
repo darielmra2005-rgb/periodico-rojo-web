@@ -6,37 +6,101 @@ const { initialMunicipality = "" } = Astro.props;
 <municipal-weather class="weather-section" data-initial-municipality={initialMunicipality}>
   <section aria-labelledby="weather-title">
     <div class="weather-heading">
-      <div><p class="weather-eyebrow">PARA ORGANIZAR TU DÍA</p><h2 id="weather-title">El tiempo en tu municipio</h2><p class="weather-subtitle">Hoy y los próximos seis días</p></div>
+      <div><p class="weather-eyebrow">PARA ORGANIZAR TU DÍA</p><h2 id="weather-title">El tiempo en tu municipio</h2><p class="weather-subtitle">Consulta el día y desliza para explorar sus horarios</p></div>
       <label class="weather-selector">Consultar municipio<select data-weather-municipality aria-label="Municipio del pronóstico">{MUNICIPALITIES.map((item) => <option value={item.slug} selected={(initialMunicipality || "monterrey") === item.slug}>{item.name}</option>)}</select></label>
     </div>
     <p class="weather-status" data-weather-status role="status" aria-live="polite">Cargando el pronóstico…</p>
     <button class="weather-retry" data-weather-retry type="button" hidden>Volver a intentar</button>
     <div data-weather-body hidden>
       <div class="weather-now">
-        <div><p class="weather-kicker" data-weather-location></p><div class="weather-temperature"><span data-weather-icon aria-hidden="true"></span><strong data-weather-temperature></strong><span class="weather-units">°C</span></div><p class="weather-condition" data-weather-condition></p></div>
-        <div class="weather-now-details"><p data-weather-range></p><p data-weather-rain></p><p data-weather-wind></p><p class="weather-estimate" data-weather-estimate></p></div>
+        <div class="weather-reading">
+          <p class="weather-kicker" data-weather-location></p>
+          <p class="weather-at" data-weather-at></p>
+          <div class="weather-temperature"><span data-weather-icon aria-hidden="true"></span><strong data-weather-temperature></strong><span class="weather-units">°C</span></div>
+          <p class="weather-condition" data-weather-condition></p>
+          <p class="weather-estimate">Temperatura prevista para la hora elegida</p>
+          <p class="weather-range" data-weather-range></p>
+        </div>
+        <div class="weather-timeline" data-weather-timeline>
+          <div class="weather-timeline-heading">
+            <div><h3>Pronóstico por hora</h3><p data-weather-day-title></p></div>
+            <div class="weather-hour-controls">
+              <button type="button" data-weather-previous aria-label="Ver el horario anterior">←</button>
+              <span class="weather-selected-time" data-weather-selected-time></span>
+              <button type="button" data-weather-next aria-label="Ver el siguiente horario">→</button>
+            </div>
+          </div>
+          <div class="weather-period-details"><p class="weather-rain" data-weather-rain></p><p data-weather-wind></p></div>
+          <div class="weather-chart" data-weather-chart>
+            <svg viewBox="0 0 640 112" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <line x1="12" y1="100" x2="628" y2="100" class="chart-baseline" />
+              <path data-weather-area class="chart-area" />
+              <path data-weather-line class="chart-line" />
+              <line data-weather-cursor x1="12" x2="12" y1="8" y2="100" class="chart-cursor" />
+              <circle data-weather-dot cx="12" cy="50" r="5" class="chart-dot" />
+            </svg>
+            <div class="weather-chart-temperatures" data-weather-chart-labels aria-hidden="true"></div>
+          </div>
+          <label class="weather-sr-only" for="weather-hour">Elegir hora del pronóstico</label>
+          <input id="weather-hour" class="weather-hour-slider" data-weather-hour type="range" min="0" max="23" step="1" value="0" aria-describedby="weather-timeline-help" />
+          <div class="weather-hour-labels" data-weather-hour-labels aria-hidden="true"></div>
+          <p id="weather-timeline-help" class="weather-timeline-help" data-weather-resolution>Desliza la barra o usa las flechas para cambiar de hora.</p>
+          <p class="weather-no-hours" data-weather-no-hours hidden>No hay horarios disponibles para este día.</p>
+        </div>
       </div>
+      <div class="weather-week-heading"><h3>Los próximos siete días</h3><span>Elige un día para ver sus horarios</span></div>
       <div class="weather-week-scroll" tabindex="0" role="region" aria-label="Pronóstico de siete días; desplaza para ver todos los días"><ol class="weather-week" data-weather-days></ol></div>
+      <details class="weather-rain-explanation"><summary>¿Qué significa la cantidad de lluvia?</summary><p data-weather-amount></p><p>1 mm equivale a 1 litro de agua por metro cuadrado. Es agua acumulada durante el intervalo indicado; no es un porcentaje ni indica cuánto tiempo lloverá.</p></details>
       <p class="weather-updated" data-weather-updated></p>
     </div>
-    <p class="weather-note">Referencia: cabecera municipal. Puede variar entre colonias y zonas de montaña. Hoy cubre las horas disponibles; los días siguientes son estimaciones que pueden cambiar. La lluvia se expresa en milímetros, no como certeza.</p>
-    <p class="weather-source">Datos de <a href="https://www.met.no/en" target="_blank" rel="noopener noreferrer">MET Norway</a>, instituto meteorológico de Noruega · <a data-weather-source href="https://api.met.no/weatherapi/locationforecast/2.0/documentation" target="_blank" rel="noopener noreferrer">Fuente</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. Resumen diario y traducción de Periódico Rojo. <a href="https://smn.conagua.gob.mx/es/" target="_blank" rel="noopener noreferrer">Consulta avisos del SMN</a>.</p>
+    <p class="weather-note">Referencia: cabecera municipal; puede variar entre colonias y montañas. Horarios de Nuevo León. El cielo y la lluvia describen el intervalo indicado, no una hora exacta de inicio. El pronóstico puede cambiar.</p>
+    <p class="weather-source">Datos de <a href="https://www.met.no/en" target="_blank" rel="noopener noreferrer">MET Norway</a>, instituto meteorológico de Noruega · <a data-weather-source href="https://api.met.no/weatherapi/locationforecast/2.0/documentation" target="_blank" rel="noopener noreferrer">Fuente</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. Presentación y traducción de Periódico Rojo. <a href="https://smn.conagua.gob.mx/es/" target="_blank" rel="noopener noreferrer">Consulta avisos del SMN</a>.</p>
     <noscript><p class="weather-note">Activa JavaScript para consultar el pronóstico actualizado o visita el Servicio Meteorológico Nacional.</p></noscript>
   </section>
 </municipal-weather>
 
 <script>
-  import { isWeatherMunicipality, localDay, WEATHER_LOCATIONS, WEATHER_TIMEZONE, type MunicipalForecast, type WeatherDay } from "@/lib/weather/forecast";
+  import { isWeatherMunicipality, localDay, WEATHER_LOCATIONS, WEATHER_TIMEZONE, type MunicipalForecast, type WeatherPeriod } from "@/lib/weather/forecast";
+  import { nearestPeriod, periodsForDay, rainLabel } from "@/lib/weather/presentation";
+  const HOUR = 3_600_000;
   class MunicipalWeather extends HTMLElement {
     private select!: HTMLSelectElement;
+    private slider!: HTMLInputElement;
     private controller?: AbortController;
     private timer?: ReturnType<typeof setInterval>;
     private observer?: IntersectionObserver;
     private visible = false;
     private lastLoaded = 0;
     private selected = "";
-    private change = () => { this.selected = this.select.value; void this.load(); };
+    private forecast?: MunicipalForecast;
+    private date = "";
+    private periods: WeatherPeriod[] = [];
+    private periodIndex = 0;
+    private coordinates: { x: number; y: number }[] = [];
+    private change = () => { this.selected = this.select.value; this.forecast = undefined; this.date = ""; this.periods = []; void this.load(); };
     private retry = () => void this.load();
+    private hourChange = () => {
+      if (!this.periods.length) return;
+      this.selectPeriod(nearestPeriod(this.periods, Date.parse(this.periods[0].time) + Number(this.slider.value) * HOUR));
+    };
+    private previous = () => this.selectPeriod(this.periodIndex - 1);
+    private next = () => this.selectPeriod(this.periodIndex + 1);
+    private hourKey = (event: KeyboardEvent) => {
+      const moves: Record<string, number> = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1, PageDown: -3, PageUp: 3 };
+      if (Object.hasOwn(moves, event.key)) { event.preventDefault(); this.selectPeriod(this.periodIndex + moves[event.key]); }
+      else if (event.key === "Home" || event.key === "End") { event.preventDefault(); this.selectPeriod(event.key === "Home" ? 0 : this.periods.length - 1); }
+    };
+    private chartClick = (event: MouseEvent) => {
+      if (!this.periods.length) return;
+      const rect = this.querySelector("[data-weather-chart]")!.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, ((event.clientX - rect.left) / rect.width * 640 - 12) / 616));
+      const first = Date.parse(this.periods[0].time), last = Date.parse(this.periods.at(-1)!.time);
+      this.selectPeriod(nearestPeriod(this.periods, first + ratio * (last - first)));
+    };
+    private dayChange = (event: Event) => {
+      const button = (event.target as Element).closest<HTMLButtonElement>("[data-weather-date]");
+      if (button?.dataset.weatherDate) this.renderDay(button.dataset.weatherDate);
+    };
     private editionChange = (event: Event) => {
       const municipality = (event as CustomEvent<string>).detail;
       if (isWeatherMunicipality(municipality) && municipality !== this.selected) { this.select.value = municipality; this.change(); }
@@ -44,11 +108,18 @@ const { initialMunicipality = "" } = Astro.props;
     private refresh = () => { if (!document.hidden && this.visible && Date.now() - this.lastLoaded > 30 * 60_000) void this.load(); };
     connectedCallback() {
       this.select = this.querySelector<HTMLSelectElement>("[data-weather-municipality]")!;
+      this.slider = this.querySelector<HTMLInputElement>("[data-weather-hour]")!;
       const fromUrl = new URL(window.location.href).searchParams.get("municipio");
       const initial = fromUrl ?? this.dataset.initialMunicipality ?? "";
       this.selected = isWeatherMunicipality(initial) ? initial : "monterrey";
       this.select.value = this.selected;
       this.select.addEventListener("change", this.change);
+      this.slider.addEventListener("input", this.hourChange);
+      this.slider.addEventListener("keydown", this.hourKey);
+      this.querySelector("[data-weather-previous]")!.addEventListener("click", this.previous);
+      this.querySelector("[data-weather-next]")!.addEventListener("click", this.next);
+      this.querySelector("[data-weather-chart]")!.addEventListener("click", this.chartClick as EventListener);
+      this.querySelector("[data-weather-days]")!.addEventListener("click", this.dayChange);
       this.querySelector("[data-weather-retry]")?.addEventListener("click", this.retry);
       this.closest("municipal-news")?.addEventListener("municipality-change", this.editionChange);
       document.addEventListener("visibilitychange", this.refresh);
@@ -57,33 +128,44 @@ const { initialMunicipality = "" } = Astro.props;
       this.timer = setInterval(this.refresh, 60_000);
     }
     disconnectedCallback() {
-      this.controller?.abort();
-      this.observer?.disconnect();
-      clearInterval(this.timer);
+      this.controller?.abort(); this.observer?.disconnect(); clearInterval(this.timer);
       this.select.removeEventListener("change", this.change);
+      this.slider.removeEventListener("input", this.hourChange);
+      this.slider.removeEventListener("keydown", this.hourKey);
+      this.querySelector("[data-weather-previous]")!.removeEventListener("click", this.previous);
+      this.querySelector("[data-weather-next]")!.removeEventListener("click", this.next);
+      this.querySelector("[data-weather-chart]")!.removeEventListener("click", this.chartClick as EventListener);
+      this.querySelector("[data-weather-days]")!.removeEventListener("click", this.dayChange);
       this.querySelector("[data-weather-retry]")?.removeEventListener("click", this.retry);
       this.closest("municipal-news")?.removeEventListener("municipality-change", this.editionChange);
       document.removeEventListener("visibilitychange", this.refresh);
     }
     private put(selector: string, text: string) { this.querySelector<HTMLElement>(selector)!.textContent = text; }
-    private number(value: number) { return new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(value); }
-    private rain(day: WeatherDay) { return day.precipitation === null ? "Lluvia: dato incompleto" : day.precipitation === 0 ? "Sin lluvia prevista" : `${this.number(day.precipitation)} mm de lluvia prevista`; }
+    private number(value: number) { return new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2 }).format(value); }
+    private time(value: string | number) { return new Intl.DateTimeFormat("es-MX", { timeZone: WEATHER_TIMEZONE, hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(value)); }
+    private dayTitle(date: string, short = false) {
+      if (date === this.forecast?.days[0].date) return "Hoy";
+      return new Intl.DateTimeFormat("es-MX", { weekday: short ? "short" : "long", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
+    }
+    private interval(period: WeatherPeriod) {
+      if (!period.periodHours) return "Intervalo de lluvia no disponible";
+      const end = Date.parse(period.time) + period.periodHours * HOUR;
+      return `${this.time(period.time)} a ${this.time(end)}${localDay(new Date(end)) !== this.date ? " del día siguiente" : ""}`;
+    }
     private async load() {
       const municipality = this.selected;
       this.controller?.abort();
-      const controller = new AbortController();
-      this.controller = controller;
-      this.lastLoaded = Date.now();
+      const controller = new AbortController(); this.controller = controller; this.lastLoaded = Date.now();
       this.querySelector<HTMLElement>("[data-weather-body]")!.hidden = true;
       this.querySelector<HTMLElement>("[data-weather-retry]")!.hidden = true;
       this.setAttribute("aria-busy", "true");
       this.put("[data-weather-status]", `Consultando el pronóstico de ${this.select.selectedOptions[0].text}…`);
       try {
-        const response = await fetch(`/api/clima?municipio=${encodeURIComponent(municipality)}`, { signal: controller.signal });
+        const response = await fetch(`/api/clima?municipio=${encodeURIComponent(municipality)}&v=hourly`, { signal: controller.signal });
         if (!response.ok) throw new Error("Forecast unavailable");
         const forecast: MunicipalForecast = await response.json();
         if (controller.signal.aborted || this.selected !== municipality) return;
-        if (forecast.municipality !== municipality || forecast.days?.length !== 7 || forecast.days[0].date !== localDay(new Date()) || Date.now() - Date.parse(forecast.updatedAt) > 12 * 60 * 60_000) throw new Error("Outdated forecast");
+        if (forecast.municipality !== municipality || forecast.days?.length !== 7 || forecast.days[0].date !== localDay(new Date()) || !Array.isArray(forecast.periods) || !forecast.periods.length || Date.now() - Date.parse(forecast.updatedAt) > 12 * HOUR) throw new Error("Outdated forecast");
         this.render(forecast);
         this.put("[data-weather-status]", `Pronóstico de ${forecast.name} disponible.`);
         this.querySelector<HTMLElement>("[data-weather-body]")!.hidden = false;
@@ -94,42 +176,121 @@ const { initialMunicipality = "" } = Astro.props;
       } finally { if (this.controller === controller) this.setAttribute("aria-busy", "false"); }
     }
     private render(forecast: MunicipalForecast) {
-      const today = forecast.days[0];
-      this.put("[data-weather-location]", `${forecast.name} · hoy`);
-      this.put("[data-weather-icon]", forecast.current.condition.icon);
-      this.put("[data-weather-temperature]", String(Math.round(forecast.current.temperature)));
-      this.put("[data-weather-condition]", forecast.current.condition.label);
-      this.put("[data-weather-range]", `Rango previsto: ${this.number(today.minimum)}° a ${this.number(today.maximum)} °C`);
-      this.put("[data-weather-rain]", this.rain(today));
-      this.put("[data-weather-wind]", forecast.current.wind === null ? "" : `Viento previsto: ${this.number(forecast.current.wind)} km/h`);
-      const time = new Intl.DateTimeFormat("es-MX", { timeZone: WEATHER_TIMEZONE, hour: "2-digit", minute: "2-digit" });
-      this.put("[data-weather-estimate]", `Temperatura estimada para las ${time.format(new Date(forecast.current.time))}.`);
+      const previousTime = this.periods[this.periodIndex]?.time;
+      this.forecast = forecast;
+      this.put("[data-weather-location]", forecast.name);
       const list = this.querySelector<HTMLOListElement>("[data-weather-days]")!;
       const cards = forecast.days.map((day, index) => {
         const card = document.createElement("li");
-        const date = document.createElement("time");
-        date.dateTime = day.date;
-        date.textContent = index === 0 ? "Hoy" : new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${day.date}T12:00:00Z`));
+        const button = document.createElement("button"); button.type = "button"; button.dataset.weatherDate = day.date;
+        button.setAttribute("aria-label", `${this.dayTitle(day.date)}, ${day.condition.label}, máxima ${this.number(day.maximum)} grados, mínima ${this.number(day.minimum)} grados. Ver horarios.`);
+        const date = document.createElement("time"); date.dateTime = day.date; date.textContent = this.dayTitle(day.date, true);
         const icon = document.createElement("span"); icon.className = "day-icon"; icon.setAttribute("aria-hidden", "true"); icon.textContent = day.condition.icon;
         const condition = document.createElement("p"); condition.className = "day-condition"; condition.textContent = day.condition.label;
         const temperature = document.createElement("p"); temperature.className = "day-temperatures"; temperature.textContent = `${this.number(day.maximum)}° / ${this.number(day.minimum)}°`;
-        const rain = document.createElement("p"); rain.className = "day-rain"; rain.textContent = this.rain(day);
-        card.append(date, icon, condition, temperature, rain);
-        if (day.partial) { const partial = document.createElement("small"); partial.textContent = index === 0 ? "Horas disponibles" : "Datos parciales"; card.append(partial); }
-        return card;
+        const rain = document.createElement("p"); rain.className = "day-rain"; rain.textContent = rainLabel(day.precipitation);
+        button.append(date, icon, condition, temperature, rain);
+        if (day.partial) { const partial = document.createElement("small"); partial.textContent = index === 0 ? "Desde la hora actual" : "Datos parciales"; button.append(partial); }
+        card.append(button); return card;
       });
       list.replaceChildren(...cards);
+      this.renderDay(forecast.days.some((day) => day.date === this.date) ? this.date : forecast.days[0].date, previousTime);
       const updated = new Intl.DateTimeFormat("es-MX", { timeZone: WEATHER_TIMEZONE, dateStyle: "medium", timeStyle: "short" }).format(new Date(forecast.updatedAt));
-      this.put("[data-weather-updated]", `Fuente actualizada: ${updated} · hora de Nuevo León. Temperaturas: máxima / mínima de los intervalos disponibles.`);
+      this.put("[data-weather-updated]", `Fuente actualizada: ${updated} · hora de Nuevo León. En las tarjetas: máxima / mínima de los intervalos disponibles.`);
       const location = WEATHER_LOCATIONS[forecast.municipality];
       this.querySelector<HTMLAnchorElement>("[data-weather-source]")!.href = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${location.latitude}&lon=${location.longitude}`;
+    }
+    private renderDay(date: string, preferredTime?: string) {
+      if (!this.forecast) return;
+      this.date = date;
+      this.periods = periodsForDay(this.forecast.periods, date);
+      for (const button of this.querySelectorAll<HTMLButtonElement>("[data-weather-date]")) button.setAttribute("aria-pressed", String(button.dataset.weatherDate === date));
+      const day = this.forecast.days.find((item) => item.date === date)!;
+      this.put("[data-weather-range]", `Máx. ${this.number(day.maximum)}° · mín. ${this.number(day.minimum)}°`);
+      this.put("[data-weather-day-title]", `${this.dayTitle(date)} · ${rainLabel(day.precipitation)}`);
+      const unavailable = !this.periods.length;
+      this.querySelector<HTMLElement>("[data-weather-no-hours]")!.hidden = !unavailable;
+      for (const selector of ["[data-weather-chart]", "[data-weather-hour]", "[data-weather-hour-labels]", "[data-weather-resolution]"]) this.querySelector<HTMLElement>(selector)!.hidden = unavailable;
+      if (unavailable) {
+        this.put("[data-weather-temperature]", "—"); this.put("[data-weather-icon]", "—");
+        this.put("[data-weather-condition]", "Horario no disponible"); this.put("[data-weather-at]", this.dayTitle(date));
+        this.put("[data-weather-rain]", "Consulta otro día para ver sus horarios."); this.put("[data-weather-wind]", "");
+        this.put("[data-weather-selected-time]", "—"); this.put("[data-weather-amount]", "Cantidad no disponible para este horario.");
+        this.querySelector<HTMLButtonElement>("[data-weather-previous]")!.disabled = true;
+        this.querySelector<HTMLButtonElement>("[data-weather-next]")!.disabled = true;
+        return;
+      }
+      this.slider.min = "0";
+      this.slider.max = String((Date.parse(this.periods.at(-1)!.time) - Date.parse(this.periods[0].time)) / HOUR);
+      this.slider.step = this.periods.every((period) => period.periodHours === 6) ? "6" : "1";
+      this.slider.disabled = this.periods.length === 1;
+      this.drawChart();
+      this.put("[data-weather-resolution]", this.periods.some((period) => period.periodHours === 6) ? "Desliza para explorar. Donde faltan datos por hora se muestran bloques de 6 horas, sin estimar horarios intermedios." : "Desliza la barra o usa las flechas para cambiar de hora. Hora de Nuevo León.");
+      const preferred = preferredTime ? Date.parse(preferredTime) : date === this.forecast.days[0].date ? Date.now() : Date.parse(`${date}T12:00:00-06:00`);
+      this.selectPeriod(nearestPeriod(this.periods, preferred));
+    }
+    private drawChart() {
+      const first = Date.parse(this.periods[0].time), span = Date.parse(this.periods.at(-1)!.time) - first;
+      const values = this.periods.map((period) => period.temperature), minimum = Math.min(...values), maximum = Math.max(...values);
+      const spread = Math.max(4, maximum - minimum), middle = (maximum + minimum) / 2;
+      this.coordinates = this.periods.map((period) => ({ x: span ? 12 + (Date.parse(period.time) - first) / span * 616 : 320, y: 62 - (period.temperature - middle) / spread * 56 }));
+      const path = this.coordinates.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+      this.querySelector("[data-weather-line]")!.setAttribute("d", path);
+      this.querySelector("[data-weather-area]")!.setAttribute("d", `${path} L${this.coordinates.at(-1)!.x},100 L${this.coordinates[0].x},100 Z`);
+      const labels = this.querySelector("[data-weather-chart-labels]")!;
+      const hours = this.querySelector("[data-weather-hour-labels]")!;
+      labels.replaceChildren(); hours.replaceChildren();
+      const indexes = new Set<number>();
+      for (let tick = 0; tick < Math.min(5, this.periods.length); tick++) indexes.add(nearestPeriod(this.periods, first + (span * tick / Math.max(1, Math.min(5, this.periods.length) - 1))));
+      for (const index of indexes) {
+        const point = this.coordinates[index], period = this.periods[index];
+        const label = document.createElement("span"); label.style.left = `${point.x / 640 * 100}%`; label.style.top = `${point.y / 112 * 100}%`; label.textContent = `${Math.round(period.temperature)}°`;
+        if (index === 0) label.classList.add("first-temperature"); else if (index === this.periods.length - 1) label.classList.add("last-temperature");
+        labels.append(label);
+        const hour = document.createElement("span"); hour.textContent = this.time(period.time); hour.style.left = `${(point.x - 12) / 616 * 100}%`;
+        if (index === 0) hour.classList.add("first-hour"); else if (index === this.periods.length - 1) hour.classList.add("last-hour");
+        hours.append(hour);
+      }
+    }
+    private selectPeriod(index: number) {
+      if (!this.periods.length) return;
+      this.periodIndex = Math.max(0, Math.min(this.periods.length - 1, index));
+      const period = this.periods[this.periodIndex], interval = this.interval(period);
+      this.put("[data-weather-at]", `${this.dayTitle(this.date)} · ${this.time(period.time)}`);
+      this.put("[data-weather-icon]", period.condition.icon);
+      this.put("[data-weather-temperature]", String(Math.round(period.temperature)));
+      this.put("[data-weather-condition]", period.condition.label);
+      this.put("[data-weather-selected-time]", this.time(period.time));
+      this.put("[data-weather-rain]", `${rainLabel(period.precipitation)}${period.periodHours ? ` · ${interval}` : ""}`);
+      this.put("[data-weather-wind]", period.wind === null ? "Viento: dato no disponible" : `Viento: ${this.number(period.wind)} km/h`);
+      this.put("[data-weather-amount]", period.precipitation === null ? "Cantidad no disponible para este intervalo." : `Agua prevista de ${interval}: ${this.number(period.precipitation)} mm (${this.number(period.precipitation)} litros por metro cuadrado)${period.periodHours === 6 ? ", acumulados en 6 horas; no es la cantidad por hora" : ""}.`);
+      this.slider.value = String((Date.parse(period.time) - Date.parse(this.periods[0].time)) / HOUR);
+      this.slider.setAttribute("aria-valuetext", `${this.dayTitle(this.date)}, ${this.time(period.time)}, ${Math.round(period.temperature)} grados Celsius, ${period.condition.label}. ${rainLabel(period.precipitation)}. ${interval}.`);
+      const point = this.coordinates[this.periodIndex];
+      const cursor = this.querySelector("[data-weather-cursor]")!; cursor.setAttribute("x1", String(point.x)); cursor.setAttribute("x2", String(point.x));
+      const dot = this.querySelector("[data-weather-dot]")!; dot.setAttribute("cx", String(point.x)); dot.setAttribute("cy", String(point.y));
+      this.querySelector<HTMLButtonElement>("[data-weather-previous]")!.disabled = this.periodIndex === 0;
+      this.querySelector<HTMLButtonElement>("[data-weather-next]")!.disabled = this.periodIndex === this.periods.length - 1;
     }
   }
   if (!customElements.get("municipal-weather")) customElements.define("municipal-weather", MunicipalWeather);
 </script>
 
 <style>
-  .weather-section{display:block;padding-top:2.5rem}[hidden]{display:none!important}.weather-heading{display:flex;align-items:end;justify-content:space-between;gap:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--paper-ink)}.weather-eyebrow{font-size:.6rem;font-weight:700;letter-spacing:.15em;color:var(--paper-red);margin-bottom:.45rem}.weather-heading h2{font-size:1.35rem;font-weight:650;letter-spacing:-.02em}.weather-subtitle{font-size:.75rem;color:var(--paper-muted);margin-top:.35rem}.weather-selector{display:flex;flex-direction:column;gap:.4rem;font-size:.65rem;font-weight:700}.weather-selector select{border:1px solid var(--paper-rule);background:transparent;color:var(--paper-ink);padding:.65rem .75rem;font-size:.8rem;min-width:14rem;max-width:100%}.weather-status{font-size:.75rem;color:var(--paper-muted);padding-block:1rem}.weather-section[aria-busy=false] .weather-status:has(+button[hidden]){position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}.weather-retry{font-size:.75rem;color:var(--paper-red);text-decoration:underline;cursor:pointer;padding-bottom:1rem}.weather-now{display:flex;align-items:center;gap:3rem;padding:1.75rem 1.5rem;background:#f0ede6;border-bottom:1px solid var(--paper-rule)}.weather-kicker{font-size:.7rem;font-weight:700}.weather-temperature{display:flex;gap:.6rem;align-items:center;margin-block:.45rem}.weather-temperature>span:first-child{font-size:2.3rem;margin-right:.4rem}.weather-temperature strong{font-family:var(--font-serif);font-size:3.7rem;line-height:1;font-weight:500;letter-spacing:-.05em}.weather-units{font-size:1.2rem;align-self:start;margin-top:.5rem}.weather-condition{font-size:.85rem}.weather-now-details{border-left:1px solid var(--paper-rule);padding-left:2rem;font-size:.8rem;line-height:1.9}.weather-estimate{font-size:.65rem;color:var(--paper-muted);margin-top:.3rem}.weather-week-scroll{overflow-x:auto}.weather-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));list-style:none;margin:0;padding:0}.weather-week :global(li){display:flex;flex-direction:column;align-items:center;text-align:center;padding:1.25rem .6rem;border-right:1px solid var(--paper-rule);border-bottom:1px solid var(--paper-rule);gap:.45rem;min-width:0}.weather-week :global(li:first-child){border-left:1px solid var(--paper-rule)}.weather-week :global(time){font-size:.65rem;font-weight:700;text-transform:capitalize}.weather-week :global(.day-icon){font-size:1.65rem;line-height:1.3}.weather-week :global(.day-condition){font-size:.65rem;min-height:2.5em;line-height:1.35}.weather-week :global(.day-temperatures){font-size:.8rem;font-weight:700}.weather-week :global(.day-rain){font-size:.6rem;color:var(--paper-muted);line-height:1.5}.weather-week :global(small){font-size:.55rem;color:var(--paper-muted)}.weather-updated,.weather-note,.weather-source{font-size:.65rem;color:var(--paper-muted);line-height:1.7;margin-top:.7rem}.weather-updated{font-weight:600}.weather-source a{text-decoration:underline;text-underline-offset:2px}.weather-source a:hover{color:var(--paper-red)}select:focus-visible,.weather-week-scroll:focus-visible,button:focus-visible{outline:2px solid var(--paper-red);outline-offset:3px}
-  @media(max-width:800px){.weather-week{min-width:780px}.weather-now{gap:2rem}.weather-now-details{padding-left:1.5rem}}
-  @media(max-width:520px){.weather-heading{align-items:stretch;flex-direction:column;gap:1rem}.weather-selector select{width:100%}.weather-heading h2{font-size:1.2rem}.weather-now{padding:1.25rem 1rem;gap:1.2rem;align-items:start;flex-direction:column}.weather-now-details{border-left:0;border-top:1px solid var(--paper-rule);padding:1rem 0 0;width:100%}.weather-temperature strong{font-size:3.1rem}}
+  .weather-section{display:block;padding-top:2.5rem}[hidden]{display:none!important}
+  .weather-heading{display:flex;align-items:end;justify-content:space-between;gap:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--paper-ink)}
+  .weather-eyebrow{font-size:.6rem;font-weight:700;letter-spacing:.15em;color:var(--paper-red);margin-bottom:.45rem}.weather-heading h2{font-size:1.35rem;font-weight:650;letter-spacing:-.02em}.weather-subtitle{font-size:.75rem;color:var(--paper-muted);margin-top:.35rem}
+  .weather-selector{display:flex;flex-direction:column;gap:.4rem;font-size:.65rem;font-weight:700}.weather-selector select{border:1px solid var(--paper-rule);background:transparent;color:var(--paper-ink);padding:.65rem .75rem;font-size:.8rem;min-width:14rem;max-width:100%}
+  .weather-status{font-size:.75rem;color:var(--paper-muted);padding-block:1rem}.weather-section[aria-busy=false] .weather-status:has(+button[hidden]),.weather-sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}.weather-retry{font-size:.75rem;color:var(--paper-red);text-decoration:underline;cursor:pointer;padding-bottom:1rem}
+  .weather-now{display:grid;grid-template-columns:225px minmax(0,1fr);align-items:center;gap:2rem;padding:1.5rem;background:#f0ede6;border-bottom:1px solid var(--paper-rule)}
+  .weather-kicker{font-size:.7rem;font-weight:700}.weather-at{font-size:.75rem;color:var(--paper-red);margin-top:.2rem;font-weight:600}.weather-temperature{display:flex;gap:.6rem;align-items:center;margin-block:.55rem}.weather-temperature>span:first-child{font-size:2.3rem;margin-right:.4rem}.weather-temperature strong{font-family:var(--font-serif);font-size:3.7rem;line-height:1;font-weight:500;letter-spacing:-.05em}.weather-units{font-size:1.2rem;align-self:start;margin-top:.5rem}.weather-condition{font-size:.9rem;font-weight:600}.weather-estimate{font-size:.62rem;color:var(--paper-muted);margin-top:.2rem}.weather-range{font-size:.75rem;margin-top:.75rem}
+  .weather-timeline{min-width:0;border-left:1px solid var(--paper-rule);padding-left:2rem}.weather-timeline-heading{display:flex;align-items:start;justify-content:space-between;gap:1rem}.weather-timeline-heading h3{font-size:.8rem;font-weight:700}.weather-timeline-heading p{font-size:.67rem;color:var(--paper-muted);margin-top:.15rem;text-transform:none}.weather-hour-controls{display:flex;gap:.35rem;align-items:center;flex-shrink:0}.weather-hour-controls button{width:32px;height:32px;border:1px solid var(--paper-rule);background:var(--paper-bg);cursor:pointer}.weather-hour-controls button:hover:enabled{border-color:var(--paper-red);color:var(--paper-red)}.weather-hour-controls button:disabled{opacity:.3;cursor:default}.weather-selected-time{font-size:.7rem;min-width:5.2rem;text-align:center;font-weight:700;color:var(--paper-red)}
+  .weather-period-details{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.2rem 1rem;margin-top:.7rem;font-size:.7rem;line-height:1.5}.weather-rain{font-weight:600}.weather-period-details p+ p{color:var(--paper-muted)}
+  .weather-chart{position:relative;height:106px;margin-top:.3rem;cursor:pointer}.weather-chart svg{display:block;width:100%;height:100%;overflow:visible}.chart-baseline{stroke:var(--paper-rule);stroke-width:1}.chart-area{fill:#d6a244;fill-opacity:.14}.chart-line{stroke:#b37a17;stroke-width:2.5;fill:none;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}.chart-cursor{stroke:var(--paper-red);stroke-width:1;stroke-dasharray:3 3;opacity:.6}.chart-dot{fill:var(--paper-red);stroke:var(--paper-bg);stroke-width:2;vector-effect:non-scaling-stroke}.weather-chart-temperatures{position:absolute;inset:0;pointer-events:none}.weather-chart-temperatures :global(span){position:absolute;font-size:.7rem;font-weight:600;line-height:1;transform:translate(-50%,calc(-100% - .4rem))}.weather-chart-temperatures :global(.first-temperature){transform:translate(0,calc(-100% - .4rem))}.weather-chart-temperatures :global(.last-temperature){transform:translate(-100%,calc(-100% - .4rem))}
+  .weather-hour-slider{display:block;appearance:none;-webkit-appearance:none;width:100%;height:30px;background:transparent;cursor:ew-resize;margin:0;accent-color:var(--paper-red);touch-action:pan-y}.weather-hour-slider::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:var(--paper-rule)}.weather-hour-slider::-moz-range-track{height:4px;border-radius:4px;background:var(--paper-rule)}.weather-hour-slider::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:50%;margin-top:-7px;background:var(--paper-red);border:3px solid var(--paper-bg);box-shadow:0 0 0 1px var(--paper-red)}.weather-hour-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--paper-red);border:3px solid var(--paper-bg);box-shadow:0 0 0 1px var(--paper-red)}.weather-hour-slider:disabled{opacity:.5;cursor:default}
+  .weather-hour-labels{position:relative;height:20px;margin-inline:9px}.weather-hour-labels :global(span){position:absolute;white-space:nowrap;transform:translateX(-50%);font-size:.62rem;color:var(--paper-muted)}.weather-hour-labels :global(.first-hour){transform:none}.weather-hour-labels :global(.last-hour){transform:translateX(-100%)}.weather-timeline-help{font-size:.62rem;color:var(--paper-muted);line-height:1.5;margin-top:.3rem}.weather-no-hours{font-size:.8rem;padding-block:2rem}
+  .weather-week-heading{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.8rem 0}.weather-week-heading h3{font-size:.75rem;font-weight:700}.weather-week-heading span{font-size:.65rem;color:var(--paper-muted)}.weather-week-scroll{overflow-x:auto;padding:3px 0}.weather-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));list-style:none;margin:0;padding:0}.weather-week :global(li){min-width:0;border-right:1px solid var(--paper-rule);border-block:1px solid var(--paper-rule)}.weather-week :global(li:first-child){border-left:1px solid var(--paper-rule)}.weather-week :global(button){display:flex;flex-direction:column;align-items:center;text-align:center;gap:.45rem;width:100%;height:100%;padding:1.05rem .5rem;cursor:pointer;border-top:3px solid transparent}.weather-week :global(button:hover){background:#f0ede6}.weather-week :global(button[aria-pressed=true]){background:#f0ede6;border-top-color:var(--paper-red)}.weather-week :global(button:focus-visible){outline-offset:-4px}.weather-week :global(time){font-size:.65rem;font-weight:700;text-transform:capitalize}.weather-week :global(.day-icon){font-size:1.65rem;line-height:1.3}.weather-week :global(.day-condition){font-size:.65rem;min-height:2.5em;line-height:1.35}.weather-week :global(.day-temperatures){font-size:.8rem;font-weight:700}.weather-week :global(.day-rain){font-size:.62rem;color:var(--paper-muted);line-height:1.5}.weather-week :global(small){font-size:.55rem;color:var(--paper-muted)}
+  .weather-rain-explanation{font-size:.65rem;line-height:1.7;color:var(--paper-muted);margin-top:.7rem}.weather-rain-explanation summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px;width:fit-content}.weather-rain-explanation p{margin-top:.35rem;max-width:72em}.weather-updated,.weather-note,.weather-source{font-size:.65rem;color:var(--paper-muted);line-height:1.7;margin-top:.7rem}.weather-updated{font-weight:600}.weather-source a{text-decoration:underline;text-underline-offset:2px}.weather-source a:hover{color:var(--paper-red)}select:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible,.weather-week-scroll:focus-visible{outline:2px solid var(--paper-red);outline-offset:3px}
+  @media(max-width:900px){.weather-now{grid-template-columns:190px minmax(0,1fr);gap:1.25rem;padding:1.25rem}.weather-timeline{padding-left:1.25rem}.weather-period-details{flex-direction:column}.weather-week{min-width:740px}}
+  @media(max-width:640px){.weather-heading{align-items:stretch;flex-direction:column;gap:1rem}.weather-selector select{width:100%}.weather-heading h2{font-size:1.2rem}.weather-now{grid-template-columns:minmax(0,1fr);gap:1rem;padding:1.1rem 1rem}.weather-reading{position:relative;padding-right:6rem;min-height:118px}.weather-temperature{position:absolute;right:0;top:.45rem;margin:0;gap:.3rem;flex-wrap:wrap;justify-content:flex-end;width:6rem}.weather-temperature>span:first-child{font-size:1.5rem;width:100%;text-align:right;margin:0}.weather-temperature strong{font-size:2.8rem}.weather-units{font-size:.9rem}.weather-at{margin-bottom:.65rem}.weather-range{margin-top:.45rem}.weather-timeline{padding:1rem 0 0;border-left:0;border-top:1px solid var(--paper-rule)}.weather-hour-controls{gap:.2rem}.weather-selected-time{min-width:4.7rem;font-size:.68rem}.weather-timeline-heading{gap:.5rem}.weather-timeline-heading h3{font-size:.75rem}.weather-timeline-heading p{font-size:.63rem}.weather-hour-labels :global(span){font-size:.58rem}.weather-week-heading{align-items:start;flex-direction:column;gap:.15rem}.weather-period-details{font-size:.68rem}.weather-chart{height:95px}}
 </style>
