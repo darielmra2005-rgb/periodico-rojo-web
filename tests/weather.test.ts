@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { conditionFor, isWeatherMunicipality, localDay, summarizeForecast, WEATHER_LOCATIONS, type MetForecast } from "../src/lib/weather/forecast.ts";
-import weatherApi from "../api/clima.ts";
+import handler, { weatherApi } from "../api/clima.ts";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
 const HOUR = 3_600_000;
 const now = new Date("2026-10-25T01:30:00Z"); // Still October 24 in Nuevo León.
@@ -79,4 +80,14 @@ test("API rejects unsupported municipalities and methods before contacting the p
     const post = await weatherApi.fetch(new Request("https://example.test/api/clima", { method: "POST" }));
     assert.equal(post.status, 405);
   } finally { globalThis.fetch = originalFetch; }
+});
+
+test("Node runtime entry point forwards the status, JSON and cache headers", async () => {
+  let status = 0, body = "";
+  const headers = new Map<string, string>();
+  const response = { set statusCode(value: number) { status = value; }, setHeader(name: string, value: string) { headers.set(name, value); }, end(value: string) { body = value; } };
+  await handler({ url: "/api/clima?municipio=unknown", method: "GET" } as IncomingMessage, response as unknown as ServerResponse);
+  assert.equal(status, 400);
+  assert.equal(headers.get("cache-control"), "no-store");
+  assert.equal(JSON.parse(body).error, "Selecciona un municipio de la cobertura.");
 });

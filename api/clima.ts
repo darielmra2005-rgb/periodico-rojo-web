@@ -1,4 +1,5 @@
 import { isWeatherMunicipality, localDay, summarizeForecast, WEATHER_LOCATIONS, type MetForecast } from "../src/lib/weather/forecast.ts";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
 const THREE_HOURS = 3 * 60 * 60 * 1000;
 type Cached = { data: MetForecast; expires: number; lastModified: string | null };
@@ -29,7 +30,7 @@ async function retrieve(municipality: keyof typeof WEATHER_LOCATIONS): Promise<C
   try { return await request; } finally { inFlight.delete(municipality); }
 }
 
-export default {
+export const weatherApi = {
   async fetch(request: Request): Promise<Response> {
     if (request.method !== "GET") return Response.json({ error: "Método no permitido." }, { status: 405, headers: { Allow: "GET", "Cache-Control": "no-store" } });
     const url = new URL(request.url);
@@ -49,3 +50,11 @@ export default {
     }
   },
 };
+
+// Use the Node request/response entry point supported by Vercel's static builds.
+export default async function handler(request: IncomingMessage, response: ServerResponse): Promise<void> {
+  const result = await weatherApi.fetch(new Request(new URL(request.url ?? "/api/clima", "https://periodico-rojo-web.vercel.app"), { method: request.method ?? "GET" }));
+  response.statusCode = result.status;
+  result.headers.forEach((value, name) => response.setHeader(name, value));
+  response.end(await result.text());
+}
