@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { conditionFor, isWeatherMunicipality, localDay, summarizeForecast, WEATHER_LOCATIONS, type MetForecast } from "../src/lib/weather/forecast.ts";
 import handler, { weatherApi } from "../api/clima.ts";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { nearestPeriod, periodsForDay, rainLabel } from "../src/lib/weather/presentation.ts";
 
 const HOUR = 3_600_000;
 const now = new Date("2026-10-25T01:30:00Z"); // Still October 24 in Nuevo León.
@@ -68,6 +69,56 @@ test("weather labels preserve rain, storms, winter precipitation and unknown con
   assert.equal(conditionFor("heavyrainandthunder").label, "Tormentas previstas");
   assert.equal(conditionFor("snow").label, "Precipitación invernal");
   assert.equal(conditionFor("unknown").label, "Condición no disponible");
+});
+
+test("hourly timeline keeps the source's temperature, wind, rain and one-hour interval together", () => {
+  const raw = fixture();
+  raw.properties.timeseries[1].data.next_1_hours!.summary!.symbol_code = "lightrain";
+  raw.properties.timeseries[1].data.next_1_hours!.details!.precipitation_amount = 0.5;
+  const result = summarizeForecast(raw, "monterrey", now);
+  const period = result.periods.find((item) => item.time === "2026-10-25T02:00:00.000Z")!;
+  assert.equal(period.temperature, 21);
+  assert.equal(period.wind, 7.2);
+  assert.equal(period.periodHours, 1);
+  assert.equal(period.precipitation, 0.5);
+  assert.equal(period.condition.label, "Lluvia prevista");
+  assert.equal(rainLabel(period.precipitation), "Lluvia escasa");
+  assert.ok(result.periods.every((item) => result.days.some((day) => day.date === localDay(new Date(item.time)))));
+});
+
+test("long-range timeline never turns a six-hour total into invented hourly rain or temperatures", () => {
+  const raw = fixture();
+  const boundary = Date.parse("2026-10-27T06:00:00Z");
+  raw.properties.timeseries = raw.properties.timeseries.filter((step) => Date.parse(step.time) < boundary || new Date(step.time).getUTCHours() % 6 === 0);
+  for (const step of raw.properties.timeseries) if (Date.parse(step.time) >= boundary) delete step.data.next_1_hours;
+  const result = summarizeForecast(raw, "garcia", now);
+  const periods = periodsForDay(result.periods, "2026-10-27", now);
+  assert.equal(periods.length, 4);
+  assert.deepEqual(periods.map((item) => item.periodHours), [6, 6, 6, 6]);
+  assert.deepEqual(periods.map((item) => item.precipitation), [6, 6, 6, 6]);
+  assert.equal(periods[nearestPeriod(periods, Date.parse("2026-10-27T13:00:00Z"))].time, "2026-10-27T12:00:00.000Z");
+});
+
+test("hour selection uses the local date and excludes hours elapsed since a cached forecast was generated", () => {
+  const result = summarizeForecast(fixture(), "escobedo", now);
+  const later = new Date("2026-10-25T03:15:00Z");
+  const today = periodsForDay(result.periods, "2026-10-24", later);
+  assert.deepEqual(today.map((item) => item.time), ["2026-10-25T03:00:00.000Z", "2026-10-25T04:00:00.000Z", "2026-10-25T05:00:00.000Z"]);
+  assert.equal(periodsForDay(result.periods, "2026-10-24", new Date("2026-10-25T06:00:00Z")).length, 0);
+});
+
+test("missing or invalid hourly precipitation stays unknown; small positive amounts are not rounded to dry", () => {
+  const raw = fixture();
+  delete raw.properties.timeseries[0].data.next_1_hours!.details!.precipitation_amount;
+  raw.properties.timeseries[1].data.next_1_hours!.details!.precipitation_amount = -1;
+  raw.properties.timeseries[2].data.next_1_hours!.details!.precipitation_amount = 0.04;
+  const periods = summarizeForecast(raw, "guadalupe", now).periods;
+  assert.equal(periods[0].precipitation, null);
+  assert.equal(periods[1].precipitation, null);
+  assert.equal(rainLabel(periods[0].precipitation), "Lluvia: cantidad no disponible");
+  assert.equal(rainLabel(periods[2].precipitation), "Lluvia escasa");
+  assert.equal(rainLabel(0), "Sin lluvia prevista");
+  assert.equal(rainLabel(2), "Se prevé lluvia");
 });
 
 test("API rejects unsupported municipalities and methods before contacting the provider", async () => {

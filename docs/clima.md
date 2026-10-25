@@ -1,5 +1,11 @@
 # Pronóstico municipal
 
+## Consulta por horarios
+
+La zona superior incluye una gráfica de temperaturas y una barra deslizable, compatible con ratón, tacto y teclado. Al moverla o usar las flechas se actualizan temperatura, cielo, viento y lluvia del intervalo elegido. Las tarjetas semanales son botones para elegir el día. Se usan exclusivamente los puntos temporales que entrega MET Norway: una hora en el corto plazo y bloques de seis horas cuando esa es la resolución disponible, sin interpolar cifras. La temperatura corresponde al instante; el símbolo y la cantidad de agua corresponden al intervalo que comienza en ese instante. La interfaz identifica también los intervalos que terminan al día siguiente.
+
+La cantidad de lluvia se presenta primero como «Sin lluvia prevista», «Lluvia escasa» (acumulado positivo menor que 1 mm) o «Se prevé lluvia», sin deducir intensidad ni probabilidad. Los milímetros y su equivalencia en litros por metro cuadrado se conservan en una explicación desplegable, con el intervalo correspondiente. Los datos desconocidos nunca se presentan como cero. Al abrir datos almacenados en caché se excluyen los horarios anteriores a la hora actual de Nuevo León. Los eventos y noticias no cambian.
+
 El bloque de portada y ediciones municipales consulta `/api/clima?municipio=monterrey` al acercarse a la pantalla. El selector permite consultar los seis municipios y sigue los cambios del filtro de noticias. No pide ubicación ni transmite coordenadas personales.
 
 La función de Vercel consulta Locationforecast 2.0 de **MET Norway**, organismo meteorológico público de Noruega, con cobertura mundial. En México es un pronóstico automático basado en modelos, no una observación de estación ni un aviso del SMN. Se conservan las noticias exclusivamente de fuentes municipales oficiales. El bloque de clima tiene atribución propia, licencia CC BY 4.0 y enlace al SMN para avisos nacionales.
