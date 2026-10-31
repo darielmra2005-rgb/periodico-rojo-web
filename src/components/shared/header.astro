@@ -1,6 +1,7 @@
 ---
 import { MUNICIPALITIES } from "@/lib/config/municipal";
 const current = Astro.url.pathname.replace(/\/$/, "");
+const activeMunicipality = MUNICIPALITIES.find((item) => current === `/municipios/${item.slug}`);
 ---
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
 <header class="paper-header">
@@ -10,9 +11,39 @@ const current = Astro.url.pathname.replace(/\/$/, "");
     <p>Noticias y eventos de la<br/><strong>zona metropolitana de Monterrey</strong></p>
   </div>
   <nav class="municipal-nav" aria-label="Navegación principal">
-    <div class="container"><a href="/" aria-current={current === "" ? "page" : undefined}>Portada</a><a href="/proyectos" aria-current={current.startsWith("/proyectos") ? "page" : undefined}>Proyectos</a><a href="/fuentes" aria-current={current === "/fuentes" ? "page" : undefined}>Fuentes</a>{MUNICIPALITIES.map((item) => <a href={`/municipios/${item.slug}`} aria-current={current === `/municipios/${item.slug}` ? "page" : undefined}>{item.name}</a>)}</div>
+    <div class="container">
+      <a href="/" aria-current={current === "" ? "page" : undefined}>Portada</a>
+      <a href="/proyectos" aria-current={current.startsWith("/proyectos") ? "page" : undefined}>Proyectos</a>
+      <a href="/fuentes" aria-current={current === "/fuentes" ? "page" : undefined}>Fuentes</a>
+      {MUNICIPALITIES.map((item) => <a class="desktop-municipality" href={`/municipios/${item.slug}`} aria-current={current === `/municipios/${item.slug}` ? "page" : undefined}>{item.name}</a>)}
+      <details class="municipality-menu">
+        <summary><span>{activeMunicipality ? `Municipios · ${activeMunicipality.name}` : "Ver municipios"}</span><span class="menu-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="municipality-options">
+          {MUNICIPALITIES.map((item) => <a href={`/municipios/${item.slug}`} aria-current={current === `/municipios/${item.slug}` ? "page" : undefined}>{item.name}</a>)}
+        </div>
+      </details>
+    </div>
   </nav>
 </header>
 <style>
 .paper-header{background:var(--paper-bg);color:var(--paper-ink)}.edition-bar{display:flex;justify-content:space-between;gap:1rem;padding-block:.7rem;border-bottom:1px solid var(--paper-rule);font-size:.72rem;letter-spacing:.03em}.edition-bar a:hover{text-decoration:underline}.masthead{display:flex;justify-content:space-between;align-items:center;padding-block:2.2rem;gap:1rem}.wordmark{font-family:var(--font-serif);font-weight:800;font-size:clamp(1.9rem,5vw,3.9rem);line-height:1;letter-spacing:-.055em}.wordmark span{color:var(--paper-red)}.wordmark small{display:block;font-family:var(--font-sans);font-size:.6rem;letter-spacing:.28em;margin-top:1rem;font-weight:600}.masthead p{font-size:.8rem;text-align:right;line-height:1.7;color:var(--paper-muted)}.municipal-nav{border-block:1px solid var(--paper-ink)}.municipal-nav>div{display:flex;align-items:stretch;gap:1.6rem;overflow-x:auto}.municipal-nav a{flex-shrink:0;padding-block:.9rem;font-size:.75rem;font-weight:700;border-bottom:3px solid transparent;white-space:nowrap}.municipal-nav a:hover,.municipal-nav a[aria-current]{border-color:var(--paper-red);color:var(--paper-red)}.skip-link{position:fixed;top:-100px;left:1rem;z-index:100;background:#fff;color:#111;padding:1rem}.skip-link:focus{top:1rem}@media(max-width:640px){.masthead p{display:none}.masthead{padding-block:1.7rem}.edition-bar a{font-size:.65rem}.municipal-nav>div{gap:1.3rem}}
+
+  .municipality-menu { display: none; }
+
+  @media (max-width: 900px) {
+    .municipal-nav > div { flex-wrap: wrap; overflow: visible; gap: 0 1.4rem; }
+    .municipal-nav .desktop-municipality { display: none; }
+    .municipality-menu { display: block; flex-basis: 100%; min-width: 0; border-top: 1px solid var(--paper-rule); }
+    .municipality-menu summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 48px; padding-block: .7rem; font-size: .85rem; font-weight: 700; cursor: pointer; list-style: none; }
+    .municipality-menu summary::-webkit-details-marker { display: none; }
+    .menu-chevron { flex-shrink: 0; font-size: 1.2rem; line-height: 1; }
+    .municipality-menu[open] .menu-chevron { transform: rotate(180deg); }
+    .municipality-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.5rem; padding-bottom: .7rem; }
+    .municipality-options a { display: flex; align-items: center; min-height: 48px; white-space: normal; font-size: .9rem; border-bottom-width: 1px; }
+    .municipality-options a[aria-current] { color: var(--paper-red); border-color: var(--paper-red); }
+  }
+
+  @media (max-width: 480px) {
+    .municipality-options { grid-template-columns: minmax(0, 1fr); }
+  }
 </style>
