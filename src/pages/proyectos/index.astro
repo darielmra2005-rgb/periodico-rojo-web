@@ -29,8 +29,8 @@ const reviewedOn = projectRecords.flatMap((record) => record.events.map((event) 
     <Tracker>
       <form class="project-filters" data-project-filters data-enhanced hidden role="search" aria-label="Buscar y filtrar proyectos" action="/proyectos">
         <label class="search-field">Buscar un proyecto<input name="q" type="search" placeholder="Nombre, tema o municipio" autocomplete="off" /></label>
-        <label>Municipio<select name="municipio"><option value="">Todos los municipios</option>{MUNICIPALITIES.map((item) => <option value={item.slug}>{item.name}</option>)}</select></label>
-        <label>Tema<select name="sector"><option value="">Todos los temas</option>{Object.entries(SECTORS).map(([id, label]) => <option value={id}>{label}</option>)}</select></label>
+        <label><span id="project-municipality-label">Municipio</span><select name="municipio" aria-labelledby="project-municipality-label"><option value="">Todos los municipios</option>{MUNICIPALITIES.map((item) => <option value={item.slug}>{item.name}</option>)}</select></label>
+        <label><span id="project-sector-label">Tema</span><select name="sector" aria-labelledby="project-sector-label"><option value="">Todos los temas</option>{Object.entries(SECTORS).map(([id, label]) => <option value={id}>{label}</option>)}</select></label>
         <div class="filter-bottom"><label class="check-label"><input type="checkbox" name="guardados" /> Sólo mis guardados</label><button type="button" class="reset-button" data-reset-projects>Restablecer filtros</button></div>
       </form>
       <noscript><p class="monitoring-context">Todos los expedientes están disponibles a continuación. Activa JavaScript para filtrar y guardar proyectos.</p></noscript>
