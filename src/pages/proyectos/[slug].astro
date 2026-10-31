@@ -1,0 +1,55 @@
+---
+import BaseLayout from "@/layouts/base.astro";
+import Tracker from "@/components/monitoring/Tracker.astro";
+import { getEntry } from "astro:content";
+import { projectRecords } from "@/lib/monitoring/data";
+import { formatDay, sourceDate, STAGES, SECTORS, EVENT_TYPES } from "@/lib/monitoring/catalog";
+import { municipalityName } from "@/lib/config/municipal";
+import "@/styles/monitoring.css";
+export function getStaticPaths() { return projectRecords.map((record) => ({ params: { slug: record.project.slug }, props: { record } })); }
+const { record } = Astro.props;
+const { project, latest, events, sources } = record;
+const home = await getEntry("views", "home");
+if (!home) return Astro.redirect("/404");
+const entry = { ...home, id: `proyecto-${project.slug}`, data: { ...home.data, title: project.title, description: project.description } };
+const superseded = new Map(events.filter((event) => event.supersedesEventId).map((event) => [event.supersedesEventId, event]));
+---
+<BaseLayout entry={entry}>
+  <div class="container monitoring" data-pagefind-body>
+    <nav class="breadcrumbs" aria-label="Ubicación"><a href="/">Portada</a><span aria-hidden="true">/</span><a href="/proyectos">Proyectos</a><span aria-hidden="true">/</span><span>Expediente</span></nav>
+    <Tracker>
+      <section class="monitoring-hero detail-hero"><div><p class="monitoring-eyebrow">{municipalityName(project.municipality)} · {SECTORS[project.sector]}</p><h1>{project.title}</h1><p class="monitoring-intro">{project.description}</p></div><button type="button" class="save-button" data-save-project={project.id} data-project-title={project.title} data-enhanced hidden aria-pressed="false">Guardar proyecto</button></section>
+      <p class="save-explanation detail-save">Guardado local en este navegador, sin notificaciones automáticas.</p>
+    </Tracker>
+    <section class="project-overview" aria-labelledby="latest-heading">
+      <div><p class="monitoring-eyebrow" id="latest-heading">ÚLTIMO HITO DOCUMENTADO</p><p class="stage-label"><span aria-hidden="true">●</span> {STAGES[latest.stage]}</p><p>{latest.summary}</p></div>
+      <dl><div><dt>Fecha de la fuente</dt><dd>{formatDay(sourceDate(latest))}</dd></div><div><dt>Último cotejo editorial</dt><dd>{formatDay(latest.review.reviewedOn)}</dd></div><div><dt>Base de la información</dt><dd>{latest.basis === "declaracion-oficial" ? "Declaración oficial" : "Acto oficial"}</dd></div></dl>
+    </section>
+    <p class="monitoring-context">La revisión comprueba lo que dice el documento. Una declaración oficial no acredita por sí sola un permiso, financiamiento o conclusión de obra. El estado puede haber cambiado después de la última fuente registrada.</p>
+    <div class="project-detail-grid">
+      <section aria-labelledby="timeline-heading"><div class="results-heading"><h2 id="timeline-heading">Historial y evidencia</h2><span>{events.length} {events.length === 1 ? "evento" : "eventos"}</span></div>
+        <ol class="project-timeline">
+          {events.map((event) => <li id={`evento-${event.id}`}>
+            <article>
+              <p class="timeline-date">Fuente publicada: {formatDay(sourceDate(event))}</p>
+              <div class="timeline-tags"><span>{EVENT_TYPES[event.type]}</span><span>{event.basis === "declaracion-oficial" ? "Declaración oficial" : "Acto oficial"}</span></div>
+              <h3>{event.title}</h3>
+              {superseded.has(event.id) && <p class="correction-note">Registro corregido. <a href={`#evento-${superseded.get(event.id)!.id}`}>Consulta la corrección</a>.</p>}
+              {event.supersedesEventId && events.some((previous) => previous.id === event.supersedesEventId) && <p class="correction-note">Corrige un registro anterior. <a href={`#evento-${event.supersedesEventId}`}>Ver la versión anterior</a>.</p>}
+              <p>{event.summary}</p>
+              <dl class="event-dates"><div><dt>Fecha del hecho</dt><dd>{formatDay(event.occurredOn)}</dd></div><div><dt>Incorporado al expediente</dt><dd>{formatDay(event.recordedOn)}</dd></div><div><dt>Cotejo de la fuente</dt><dd>{formatDay(event.review.reviewedOn)} · {event.review.reviewer}</dd></div></dl>
+              <div class="evidence-list"><h4>Documentos que respaldan este registro</h4>{event.evidence.map((evidence) => <div class="evidence-item"><a href={evidence.url} target="_blank" rel="noopener noreferrer">{evidence.title} <span aria-hidden="true">↗</span><span class="sr-only"> (abre en otra pestaña)</span></a><p>{sources.find((source) => source.id === evidence.sourceId)?.organization} · {formatDay(evidence.publishedOn)}</p><p class="evidence-locator"><strong>Dónde comprobarlo:</strong> {evidence.locator}</p></div>)}</div>
+            </article>
+          </li>)}
+        </ol>
+      </section>
+      <aside class="project-sidebar" aria-label="Contexto del expediente">
+        <section><p class="monitoring-eyebrow">SIGUIENTE VERIFICACIÓN</p><h2>Información pendiente</h2><ul>{project.missingInformation.map((item) => <li>{item}</li>)}</ul><p class="sidebar-note">No disponer de un dato no significa que sea cero, que el requisito no aplique o que no exista riesgo.</p></section>
+        <section><h2>Ubicación documentada</h2><p>{project.locationDescription}</p><p class="sidebar-note">Precisión: {project.locationPrecision === "municipio" ? "municipal" : project.locationPrecision === "tramo-descrito" ? "tramo descrito, sin geometría verificada" : "sitio verificado"}.</p></section>
+        <section><h2>Fuentes del expediente</h2><ul class="source-links">{sources.map((source) => <li><a href={`/fuentes#${source.id}`}>{source.organization} <span aria-hidden="true">↗</span></a></li>)}</ul></section>
+        {project.relatedArticle && <section><h2>En el periódico</h2><a class="text-link" href={project.relatedArticle}>Leer la nota municipal <span aria-hidden="true">↗</span></a></section>}
+      </aside>
+    </div>
+    <a class="text-link back-link" href="/proyectos">← Volver a todos los proyectos</a>
+  </div>
+</BaseLayout>

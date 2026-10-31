@@ -1,0 +1,30 @@
+---
+import BaseLayout from "@/layouts/base.astro";
+import { getEntry } from "astro:content";
+import { catalog, projectRecords } from "@/lib/monitoring/data";
+import { formatDay } from "@/lib/monitoring/catalog";
+import "@/styles/monitoring.css";
+const home = await getEntry("views", "home");
+if (!home) return Astro.redirect("/404");
+const entry = { ...home, id: "fuentes-proyectos", data: { ...home.data, title: "Fuentes del seguimiento", description: "Origen, cobertura, revisión y condiciones de uso de las fuentes del seguimiento de proyectos." } };
+const labels = { comprobado: "Consulta comprobada", pendiente: "Acceso pendiente de comprobar", "no-disponible": "Acceso no disponible" };
+---
+<BaseLayout entry={entry}>
+  <div class="container monitoring" data-pagefind-body>
+    <nav class="breadcrumbs" aria-label="Ubicación"><a href="/">Portada</a><span aria-hidden="true">/</span><a href="/proyectos">Proyectos</a><span aria-hidden="true">/</span><span>Fuentes</span></nav>
+    <section class="monitoring-hero"><div><p class="monitoring-eyebrow">ORIGEN Y COBERTURA</p><h1>Fuentes del seguimiento</h1><p class="monitoring-intro">Consulta quién publica la información, qué hemos comprobado y qué condiciones siguen pendientes.</p></div><a class="text-link" href="/proyectos">Ver proyectos <span aria-hidden="true">↗</span></a></section>
+    <p class="monitoring-context">Este catálogo corresponde a la sección de proyectos. El cotejo de un comunicado no certifica todo el portal. La incorporación de documentos es manual y no implica una vigilancia continua de las fuentes.</p>
+    <div class="source-catalog">
+      {catalog.sources.map((source) => {
+        const records = projectRecords.filter((record) => record.sources.some((item) => item.id === source.id));
+        return <article class="source-record" id={source.id}>
+          <div class="source-record-heading"><div><p class="monitoring-eyebrow">FUENTE MUNICIPAL</p><h2>{source.name}</h2><p>{source.organization}</p></div><span class="source-status">{labels[source.accessStatus]}</span></div>
+          <dl class="source-facts"><div><dt>Cobertura documentada</dt><dd>{source.coverage}</dd></div><div><dt>Última comprobación de acceso</dt><dd>{formatDay(source.checkedOn)}</dd></div><div><dt>Incorporación de información</dt><dd>Revisión editorial manual</dd></div><div><dt>Condiciones de reutilización</dt><dd>{source.usage.status === "verificada" ? source.usage.license : "Pendientes de revisión"}</dd></div></dl>
+          <p class="source-usage">{source.usage.note}</p>
+          <div class="source-record-links"><a class="text-link" href={source.portalUrl} target="_blank" rel="noopener noreferrer">Visitar el portal oficial ↗<span class="sr-only"> (abre en otra pestaña)</span></a>{source.usage.termsUrl && <a class="text-link" href={source.usage.termsUrl} target="_blank" rel="noopener noreferrer">Consultar condiciones de uso ↗</a>}</div>
+          <div class="linked-projects"><h3>Expedientes con esta fuente</h3>{records.length ? <ul>{records.map(({ project }) => <li><a href={`/proyectos/${project.slug}`}>{project.title} <span aria-hidden="true">↗</span></a></li>)}</ul> : <p>Todavía no hay expedientes publicados con esta fuente.</p>}</div>
+        </article>;
+      })}
+    </div>
+  </div>
+</BaseLayout>

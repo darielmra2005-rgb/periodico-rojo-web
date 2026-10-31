@@ -1,0 +1,53 @@
+---
+import BaseLayout from "@/layouts/base.astro";
+import Tracker from "@/components/monitoring/Tracker.astro";
+import { getEntry } from "astro:content";
+import { projectRecords } from "@/lib/monitoring/data";
+import { formatDay, sourceDate, SECTORS, STAGES } from "@/lib/monitoring/catalog";
+import { MUNICIPALITIES, municipalityName } from "@/lib/config/municipal";
+import "@/styles/monitoring.css";
+const home = await getEntry("views", "home");
+if (!home) return Astro.redirect("/404");
+const entry = { ...home, id: "proyectos", data: { ...home.data, title: "Proyectos y seguimiento", description: "Expedientes de proyectos con historial de hechos, documentos oficiales y datos pendientes de verificar." } };
+const eventCount = projectRecords.reduce((total, record) => total + record.events.length, 0);
+const sourceCount = new Set(projectRecords.flatMap((record) => record.sources.map((source) => source.id))).size;
+const reviewedOn = projectRecords.flatMap((record) => record.events.map((event) => event.review.reviewedOn!)).sort().at(-1) ?? null;
+---
+<BaseLayout entry={entry}>
+  <div class="container monitoring" data-pagefind-body>
+    <nav class="breadcrumbs" aria-label="Ubicación"><a href="/">Portada</a><span aria-hidden="true">/</span><span>Proyectos</span></nav>
+    <section class="monitoring-hero">
+      <div><p class="monitoring-eyebrow">SEGUIMIENTO DOCUMENTAL · NUEVO LEÓN</p><h1>Proyectos y seguimiento</h1><p class="monitoring-intro">Consulta qué se ha informado, revisa la evidencia y encuentra lo que todavía falta por confirmar.</p></div>
+      <a class="text-link" href="/fuentes">Conoce las fuentes <span aria-hidden="true">↗</span></a>
+    </section>
+    <div class="monitoring-stats" aria-label="Cobertura de esta sección">
+      <div><strong>{projectRecords.length.toString().padStart(2, "0")}</strong><span>Proyectos en seguimiento</span></div>
+      <div><strong>{eventCount.toString().padStart(2, "0")}</strong><span>Eventos documentados</span></div>
+      <div><strong>{sourceCount.toString().padStart(2, "0")}</strong><span>Fuentes consultadas</span></div>
+    </div>
+    <p class="monitoring-context">Actualización manual · Último cotejo: {formatDay(reviewedOn)}. Cada ficha muestra el último hito documentado, no una confirmación del estado actual del proyecto.</p>
+    <Tracker>
+      <form class="project-filters" data-project-filters data-enhanced hidden role="search" aria-label="Buscar y filtrar proyectos" action="/proyectos">
+        <label class="search-field">Buscar un proyecto<input name="q" type="search" placeholder="Nombre, tema o municipio" autocomplete="off" /></label>
+        <label>Municipio<select name="municipio"><option value="">Todos los municipios</option>{MUNICIPALITIES.map((item) => <option value={item.slug}>{item.name}</option>)}</select></label>
+        <label>Tema<select name="sector"><option value="">Todos los temas</option>{Object.entries(SECTORS).map(([id, label]) => <option value={id}>{label}</option>)}</select></label>
+        <div class="filter-bottom"><label class="check-label"><input type="checkbox" name="guardados" /> Sólo mis guardados</label><button type="button" class="reset-button" data-reset-projects>Restablecer filtros</button></div>
+      </form>
+      <noscript><p class="monitoring-context">Todos los expedientes están disponibles a continuación. Activa JavaScript para filtrar y guardar proyectos.</p></noscript>
+      <div class="results-heading"><h2>Expedientes</h2><span data-project-count role="status" aria-live="polite">{projectRecords.length} {projectRecords.length === 1 ? "proyecto" : "proyectos"}</span></div>
+      <div class="project-grid">
+        {projectRecords.map(({ project, latest, events }) => <article class="project-card" data-project-card data-project-id={project.id} data-municipality={project.municipality} data-sector={project.sector} data-search={`${project.title} ${project.description} ${latest.summary} ${municipalityName(project.municipality)} ${SECTORS[project.sector]}`}>
+          <div class="project-kicker"><span>{municipalityName(project.municipality)}</span><span>{SECTORS[project.sector]}</span></div>
+          <h3><a href={`/proyectos/${project.slug}`}>{project.title}</a></h3>
+          <p class="stage-label"><span aria-hidden="true">●</span> {STAGES[latest.stage]}</p>
+          <p class="project-summary">{latest.summary}</p>
+          <dl class="project-meta"><div><dt>Documento más reciente</dt><dd>{formatDay(sourceDate(latest))}</dd></div><div><dt>Historial</dt><dd>{events.length} {events.length === 1 ? "evento registrado" : "eventos registrados"}</dd></div></dl>
+          <p class="project-pending"><strong>Por verificar:</strong> {project.missingInformation[0]}</p>
+          <div class="project-card-actions"><a class="primary-link" href={`/proyectos/${project.slug}`}>Abrir expediente <span aria-hidden="true">↗</span></a><button type="button" class="save-button" data-save-project={project.id} data-project-title={project.title} data-enhanced hidden aria-pressed="false">Guardar proyecto</button></div>
+        </article>)}
+      </div>
+      <div class="projects-empty" data-project-empty hidden={projectRecords.length > 0}><h3>No hay proyectos con esta selección.</h3><p>Prueba otro tema o municipio. Si activaste los guardados, guarda primero un expediente.</p><button type="button" class="reset-button" data-reset-projects data-enhanced hidden>Ver todos los proyectos</button></div>
+      <p class="save-explanation">Los guardados permanecen en este navegador y pueden perderse si borras sus datos. No se sincronizan entre dispositivos ni activan notificaciones.</p>
+    </Tracker>
+  </div>
+</BaseLayout>

@@ -1,0 +1,107 @@
+<project-tracker><slot /><p class="save-feedback" data-save-feedback role="status" aria-live="polite"></p></project-tracker>
+
+<script>
+  import { matchesProject, parseSavedProjects } from "@/lib/monitoring/filters";
+  const KEY = "periodico-rojo:project-bookmarks:v1";
+  class ProjectTracker extends HTMLElement {
+    private saved = new Set<string>();
+    private form: HTMLFormElement | null = null;
+    private feedback(message: string) { this.querySelector<HTMLElement>("[data-save-feedback]")!.textContent = message; }
+    private controls() {
+      return {
+        query: this.querySelector<HTMLInputElement>('[name="q"]'),
+        municipality: this.querySelector<HTMLSelectElement>('[name="municipio"]'),
+        sector: this.querySelector<HTMLSelectElement>('[name="sector"]'),
+        saved: this.querySelector<HTMLInputElement>('[name="guardados"]'),
+      };
+    }
+    private restore = () => {
+      const controls = this.controls();
+      const params = new URL(window.location.href).searchParams;
+      if (controls.query) controls.query.value = params.get("q") ?? "";
+      for (const [key, control] of [["municipio", controls.municipality], ["sector", controls.sector]] as const) {
+        if (control) control.value = [...control.options].some((option) => option.value === params.get(key)) ? params.get(key)! : "";
+      }
+      if (controls.saved) controls.saved.checked = params.get("guardados") === "1";
+      this.render(false);
+    };
+    private changed = () => this.render(true);
+    private submit = (event: Event) => { event.preventDefault(); this.render(true); };
+    private storage = (event: StorageEvent) => {
+      if (event.key === KEY || event.key === null) {
+        this.saved = parseSavedProjects(event.key === null ? null : event.newValue);
+        this.render(false);
+      }
+    };
+    private handleClick = (event: Event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest("[data-reset-projects]")) {
+        this.form?.reset();
+        this.render(true);
+      }
+      const button = target?.closest<HTMLButtonElement>("[data-save-project]");
+      if (!button || !this.contains(button) || !button.dataset.saveProject) return;
+      const id = button.dataset.saveProject;
+      const next = new Set(this.saved);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try {
+        localStorage.setItem(KEY, JSON.stringify([...next]));
+        this.saved = next;
+        this.feedback(next.has(id) ? "Proyecto guardado en este navegador." : "Proyecto quitado de tus guardados.");
+        this.render(false);
+        if (button.closest<HTMLElement>("[data-project-card]")?.hidden) this.controls().saved?.focus();
+      } catch {
+        this.feedback("No se pudo guardar el cambio. Revisa el almacenamiento permitido por tu navegador.");
+      }
+    };
+    connectedCallback() {
+      this.form = this.querySelector<HTMLFormElement>("[data-project-filters]");
+      try { this.saved = parseSavedProjects(localStorage.getItem(KEY)); }
+      catch { this.feedback("El navegador no permite leer los guardados. Puedes consultar todos los expedientes."); }
+      this.querySelectorAll<HTMLElement>("[data-enhanced]").forEach((item) => item.hidden = false);
+      this.addEventListener("click", this.handleClick);
+      this.form?.addEventListener("input", this.changed);
+      this.form?.addEventListener("change", this.changed);
+      this.form?.addEventListener("submit", this.submit);
+      window.addEventListener("popstate", this.restore);
+      window.addEventListener("storage", this.storage);
+      this.restore();
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this.handleClick);
+      this.form?.removeEventListener("input", this.changed);
+      this.form?.removeEventListener("change", this.changed);
+      this.form?.removeEventListener("submit", this.submit);
+      window.removeEventListener("popstate", this.restore);
+      window.removeEventListener("storage", this.storage);
+    }
+    private render(updateUrl: boolean) {
+      this.querySelectorAll<HTMLButtonElement>("[data-save-project]").forEach((button) => {
+        const saved = this.saved.has(button.dataset.saveProject!);
+        button.setAttribute("aria-pressed", String(saved));
+        button.textContent = saved ? "Guardado ✓" : "Guardar proyecto";
+        button.setAttribute("aria-label", `${saved ? "Quitar de guardados" : "Guardar"}: ${button.dataset.projectTitle}`);
+      });
+      if (!this.form) return;
+      const controls = this.controls();
+      const filters = { query: controls.query?.value ?? "", municipality: controls.municipality?.value ?? "", sector: controls.sector?.value ?? "", savedOnly: controls.saved?.checked ?? false };
+      let count = 0;
+      this.querySelectorAll<HTMLElement>("[data-project-card]").forEach((card) => {
+        card.hidden = !matchesProject({ search: card.dataset.search ?? "", municipality: card.dataset.municipality ?? "", sector: card.dataset.sector ?? "", saved: this.saved.has(card.dataset.projectId!) }, filters);
+        if (!card.hidden) count++;
+      });
+      const counter = this.querySelector<HTMLElement>("[data-project-count]");
+      if (counter) counter.textContent = `${count} ${count === 1 ? "proyecto" : "proyectos"}`;
+      const empty = this.querySelector<HTMLElement>("[data-project-empty]");
+      if (empty) empty.hidden = count > 0;
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        for (const [key, value] of [["q", filters.query.trim()], ["municipio", filters.municipality], ["sector", filters.sector], ["guardados", filters.savedOnly ? "1" : ""]]) {
+          if (value) url.searchParams.set(key, value); else url.searchParams.delete(key);
+        }
+        history.replaceState(history.state, "", url);
+      }
+    }
+  }
+  if (!customElements.get("project-tracker")) customElements.define("project-tracker", ProjectTracker);
+</script>

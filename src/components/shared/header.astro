@@ -9,8 +9,8 @@ const current = Astro.url.pathname.replace(/\/$/, "");
     <a href="/" class="wordmark" aria-label="Periódico Rojo, inicio">PERIÓDICO <span>ROJO</span><small>LA INFORMACIÓN CERCA DE TI</small></a>
     <p>Noticias y eventos de la<br/><strong>zona metropolitana de Monterrey</strong></p>
   </div>
-  <nav class="municipal-nav" aria-label="Municipios">
-    <div class="container"><a href="/" aria-current={current === "" ? "page" : undefined}>Portada</a>{MUNICIPALITIES.map((item) => <a href={`/municipios/${item.slug}`} aria-current={current === `/municipios/${item.slug}` ? "page" : undefined}>{item.name}</a>)}</div>
+  <nav class="municipal-nav" aria-label="Navegación principal">
+    <div class="container"><a href="/" aria-current={current === "" ? "page" : undefined}>Portada</a><a href="/proyectos" aria-current={current.startsWith("/proyectos") ? "page" : undefined}>Proyectos</a><a href="/fuentes" aria-current={current === "/fuentes" ? "page" : undefined}>Fuentes</a>{MUNICIPALITIES.map((item) => <a href={`/municipios/${item.slug}`} aria-current={current === `/municipios/${item.slug}` ? "page" : undefined}>{item.name}</a>)}</div>
   </nav>
 </header>
 <style>

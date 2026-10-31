@@ -5,7 +5,7 @@ import { MUNICIPALITIES, NEWS_CATEGORIES } from "@/lib/config/municipal";
   <div class="container footer-grid">
     <div><a href="/" class="footer-brand">PERIÓDICO <span>ROJO</span></a><p>La información cerca de ti.</p><p>Noticias, eventos y avisos de la zona metropolitana de Monterrey. Cada nota incluye su fuente.</p></div>
     <nav aria-label="Municipios en el pie de página"><strong>Municipios</strong>{MUNICIPALITIES.map((item)=><a href={`/municipios/${item.slug}`}>{item.name}</a>)}</nav>
-    <nav aria-label="Secciones"><strong>Secciones</strong>{NEWS_CATEGORIES.map((item)=><a href={`/categorias/${item.slug}`}>{item.name}</a>)}</nav>
+    <nav aria-label="Secciones"><strong>Secciones</strong><a href="/proyectos">Proyectos y seguimiento</a><a href="/fuentes">Fuentes del seguimiento</a>{NEWS_CATEGORIES.map((item)=><a href={`/categorias/${item.slug}`}>{item.name}</a>)}</nav>
   </div>
   <div class="container footer-bottom"><span>© {new Date().getFullYear()} Periódico Rojo</span><div><a href="/about">Sobre el periódico</a><a href="/rss.xml">RSS</a></div></div>
 </footer>

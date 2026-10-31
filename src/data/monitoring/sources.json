@@ -1,0 +1,36 @@
+[
+  {
+    "id": "monterrey-comunicados",
+    "name": "Comunicados de Monterrey",
+    "organization": "Gobierno de Monterrey",
+    "portalUrl": "https://www.monterrey.gob.mx/noticias/",
+    "allowedHosts": ["monterrey.gob.mx", "www.monterrey.gob.mx"],
+    "coverage": "Comunicados municipales de Monterrey, Nuevo León",
+    "accessMode": "manual",
+    "accessStatus": "comprobado",
+    "checkedOn": "2026-10-30",
+    "usage": {
+      "status": "pendiente",
+      "license": null,
+      "termsUrl": null,
+      "note": "No se ha confirmado una licencia general de reutilización. Este seguimiento ofrece una síntesis editorial y enlaces; no redistribuye el comunicado completo ni sus fotografías."
+    }
+  },
+  {
+    "id": "escobedo-comunicados",
+    "name": "Comunicados de General Escobedo",
+    "organization": "Gobierno de General Escobedo",
+    "portalUrl": "https://escobedo.gob.mx/?p=notas",
+    "allowedHosts": ["escobedo.gob.mx", "www.escobedo.gob.mx"],
+    "coverage": "Comunicados municipales de General Escobedo, Nuevo León",
+    "accessMode": "manual",
+    "accessStatus": "comprobado",
+    "checkedOn": "2026-10-30",
+    "usage": {
+      "status": "pendiente",
+      "license": null,
+      "termsUrl": null,
+      "note": "No se ha confirmado una licencia general de reutilización. Este seguimiento ofrece una síntesis editorial y enlaces; no redistribuye el comunicado completo ni sus fotografías."
+    }
+  }
+]

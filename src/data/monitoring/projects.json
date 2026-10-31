@@ -1,0 +1,35 @@
+[
+  {
+    "id": "b08e8b69-5223-4ae4-8ced-b88266e965dc",
+    "slug": "limpieza-canal-medular",
+    "title": "Limpieza preventiva del Canal Medular",
+    "description": "Expediente de seguimiento de los comunicados municipales sobre el mantenimiento del canal.",
+    "municipality": "monterrey",
+    "sector": "obras-y-servicios",
+    "locationDescription": "Tramo de Sierra Verde a Ocaso, zona norte de Monterrey, según el comunicado municipal.",
+    "locationPrecision": "tramo-descrito",
+    "relatedArticle": "/articles/monterrey-limpieza-canal-medular",
+    "missingInformation": [
+      "Fecha de conclusión de las labores descritas.",
+      "Presupuesto o contrato asociado a esta intervención.",
+      "Delimitación geográfica verificada del tramo."
+    ],
+    "isPublic": true
+  },
+  {
+    "id": "af9c214a-06ea-4124-8949-d97bcc352ad1",
+    "slug": "visor-urbano-geoportal-escobedo",
+    "title": "Visor Urbano y Geoportal de Escobedo",
+    "description": "Expediente de seguimiento de la presentación de las herramientas municipales de consulta territorial.",
+    "municipality": "escobedo",
+    "sector": "planeacion-urbana",
+    "locationDescription": "General Escobedo, Nuevo León. El alcance descrito es municipal; no corresponde a un predio específico.",
+    "locationPrecision": "municipio",
+    "relatedArticle": "/articles/escobedo-visor-urbano-geoportal",
+    "missingInformation": [
+      "Comprobación de acceso y funcionamiento de cada herramienta.",
+      "Cobertura, fecha de actualización y condiciones de reutilización de sus capas."
+    ],
+    "isPublic": true
+  }
+]
