@@ -1,0 +1,58 @@
+[
+  {
+    "id": "b9ab591c-24d7-4af2-9c5c-4439638adc82",
+    "projectId": "b08e8b69-5223-4ae4-8ced-b88266e965dc",
+    "type": "avance",
+    "stage": "avance-reportado",
+    "title": "El municipio informa de trabajos de limpieza",
+    "summary": "Servicios Públicos reportó labores de mantenimiento en el Canal Medular y señaló que continuarían. El comunicado describe actividad en el tramo de Sierra Verde a Ocaso; no acredita la conclusión de la intervención.",
+    "basis": "declaracion-oficial",
+    "occurredOn": null,
+    "recordedOn": "2026-10-30",
+    "evidence": [
+      {
+        "sourceId": "monterrey-comunicados",
+        "url": "https://www.monterrey.gob.mx/noticias/retira-gobierno-de-monterrey-4-mil-toneladas-de-basura-y-escombro-del-canal-medular/",
+        "title": "Comunicado sobre la limpieza del Canal Medular",
+        "publishedOn": "2026-10-23",
+        "locator": "Fecha bajo el título; párrafos sobre el tramo de Sierra Verde a Ocaso y continuidad de las labores.",
+        "supports": ["title", "summary", "stage", "location"]
+      }
+    ],
+    "review": {
+      "status": "cotejado",
+      "reviewedOn": "2026-10-30",
+      "reviewer": "Revisión editorial asistida por IA"
+    },
+    "supersedesEventId": null,
+    "isPublic": true
+  },
+  {
+    "id": "7b77a25d-caf0-4fea-8d46-e90b5f2323ec",
+    "projectId": "af9c214a-06ea-4124-8949-d97bcc352ad1",
+    "type": "anuncio",
+    "stage": "anunciado",
+    "title": "Escobedo presenta dos herramientas de consulta territorial",
+    "summary": "El gobierno municipal presentó el Visor Urbano y el Geoportal para consultar información urbanística y territorial. Este registro acredita la declaración publicada; el funcionamiento y la cobertura de las plataformas requieren una comprobación separada.",
+    "basis": "declaracion-oficial",
+    "occurredOn": null,
+    "recordedOn": "2026-10-30",
+    "evidence": [
+      {
+        "sourceId": "escobedo-comunicados",
+        "url": "https://escobedo.gob.mx/?a=20261022&p=notas",
+        "title": "Habilita Escobedo Visor Urbano y Geoportal",
+        "publishedOn": "2026-10-22",
+        "locator": "Fecha de la nota y párrafos que describen la presentación, el Visor Urbano y el Geoportal.",
+        "supports": ["title", "summary", "stage", "location"]
+      }
+    ],
+    "review": {
+      "status": "cotejado",
+      "reviewedOn": "2026-10-30",
+      "reviewer": "Revisión editorial asistida por IA"
+    },
+    "supersedesEventId": null,
+    "isPublic": true
+  }
+]
